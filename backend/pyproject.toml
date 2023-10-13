@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "backend"
+version = "0.1.0"
+description = ""
+authors = ["vdeoli01 <vdeoli01@student.bbk.ac.uk>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.101.1"
+fastapi-users = {extras = ["sqlalchemy"], version = "^12.1.2"}
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.20"}
+uvicorn = "^0.23.2"
+psycopg2-binary = "^2.9.7"
+alembic = "^1.11.3"
+bcrypt = "^4.0.1"
+asyncpg = "^0.28.0"
+requests-mock = "^1.11.0"
+pytest = "^7.4.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
