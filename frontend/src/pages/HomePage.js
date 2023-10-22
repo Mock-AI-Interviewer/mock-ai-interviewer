@@ -7,7 +7,7 @@ function HomePage() {
         <>
             <TopAppBar />
             <Container component="main" maxWidth="md" style={{ marginTop: '3%', textAlign: 'center' }}>
-                <h1>Welcome to the AI interview Quiz</h1>
+                <h1>Mock AI Interviewer</h1>
                 <br />
                 <br />
             </Container>

@@ -3,7 +3,10 @@ version: '3.7'
 services:
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        PASSWORD: ${PASSWORD}
     ports:
       - "3000:80"
     depends_on:
