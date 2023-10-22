@@ -14,19 +14,19 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - postgres
+      - mongo
 
-  postgres:
-    image: postgres:latest
-    container_name: postgres-db-container
+  mongo:
+    image: mongo:latest
+    container_name: mongo-db-container
     environment:
-      POSTGRES_USER: test
-      POSTGRES_PASSWORD: test
-      POSTGRES_DB: test-db
+      MONGO_INITDB_ROOT_USERNAME: test
+      MONGO_INITDB_ROOT_PASSWORD: test
+      MONGO_INITDB_DATABASE: test-db
     ports:
-      - "5432:5432"
+      - "27017:27017"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mongo_data:/data/db
 
 volumes:
-  postgres_data:
+  mongo_data:
