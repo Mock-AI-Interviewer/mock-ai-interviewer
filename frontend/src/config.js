@@ -1,0 +1,1 @@
+export const BASE_API_ENDPOINT = process.env.REACT_APP_BASE_API_ENDPOINT;
