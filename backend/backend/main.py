@@ -1,5 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+# import io
+# from google.oauth2 import service_account
+# from google.cloud import speech
+
+# client_file = 'sa-mock-ai-interviewer'
+# credentials = service_account.Credentials.from_service_account_file(client_file + '.json')
+# client = speech.SpeechClient(credentials=credentials)
 
 # Initialise App
 app = FastAPI()
