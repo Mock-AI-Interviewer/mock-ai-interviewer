@@ -22,10 +22,6 @@ services:
   mongo:
     image: mongo:latest
     container_name: mongo-db-container
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: test
-      MONGO_INITDB_ROOT_PASSWORD: test
-      MONGO_INITDB_DATABASE: test-db
     ports:
       - "27017:27017"
     volumes:
