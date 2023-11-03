@@ -1,6 +1,12 @@
-# mock-ai-interviewer
+# Mock AI Interviewer 
 
-mock-ai-interviewer
+- This project is a mock AI interviewer that asks you questions and records your answers 🧠
+
+
+- The project is split into 3 parts, each with their own respective READMEs:
+  - The backend which is responsible for the AI and the database - [README](./backend/README.md)
+  - The frontend which is responsible for the UI and the user interaction - [README](./frontend/README.md)
+  - The Database which stores the interview types and the conversation history - [README](./backend/backend/db/README.md)
 
 ## Running locally
 
