@@ -1,9 +1,9 @@
 {
     "interview_type": {
-        "id": "Fwrheg8942tg0nireanv",
-        "name": "System Design",
-        "description": "System Design Based Interview",
-        "init_prompt": "Please act as a system design interviewer that is giving a candidate the task of designing a system for a new online marketplace"
+        "name": "Product Sense",
+        "description": "Product Sense Interview",
+        "job_description": "",
+        "init_prompt": "Practice an interactive mock product sense interview with me now. You are the interviewer and you should wait for my responses so that I can practice."
     },
     "user_id": "1",
     "start_time": "2021-05-01 12:00:00",
