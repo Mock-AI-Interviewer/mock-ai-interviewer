@@ -5,11 +5,14 @@ for development.
 """
 
 import json
-import os
-from mongoengine import connect, DateTimeField, Document
-from backend.schemas.interviews import InterviewSessionDocument, InterviewTypeDocument
-from backend.conf import get_root_package_path
 import logging
+import os
+
+from mongoengine import connect
+
+from backend.conf import get_root_package_path
+from backend.db.schemas.interviews import (InterviewSessionDocument,
+                                           InterviewTypeDocument)
 
 LOGGER = logging.getLogger(__name__)
 
