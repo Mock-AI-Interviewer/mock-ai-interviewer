@@ -1,0 +1,14 @@
+[
+    {
+        "name": "Competancy",
+        "description": "Competancy Based Interview",
+        "job_description": "Job Title: Software Engineer\nJob Description: We are seeking a highly skilled software engineer to join our team. The ideal candidate will have a strong background in software development (specifically python) and be able to work collaboratively with other team members to design, develop, and maintain software applications. The candidate should be comfortable working in a fast-paced environment and have a strong attention to detail.",
+        "init_prompt": "Practice a mock competancy based interview with me now. You are the interviewer and you should wait for my responses so that I can practice."
+    },
+    {
+        "name": "Product Sense",
+        "description": "Product Sense Interview",
+        "job_description": "",
+        "init_prompt": "Practice an interactive mock product sense interview with me now. You are the interviewer and you should wait for my responses so that I can practice."
+    }
+]
