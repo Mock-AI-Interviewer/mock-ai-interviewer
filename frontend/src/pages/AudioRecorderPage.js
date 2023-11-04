@@ -1,7 +1,6 @@
 import { Container } from "@mui/material";
 import React, { useState, useEffect } from 'react';
 import TopAppBar from "../components/TopAppBar";
-import mockServer from "./mockWebSocketServer";
 
 function AudioRecorderPage() {
     const [recording, setRecording] = useState(false);
@@ -9,7 +8,7 @@ function AudioRecorderPage() {
     const [audioURL, setAudioURL] = useState(null);
     const [websocket, setWebsocket] = useState(null);
     const [chunks, setChunks] = useState([]);
-    const [websocketEndpoint, setWebsocketEndpoint] = useState('ws://localhost:8080');
+    const [websocketEndpoint, setWebsocketEndpoint] = useState('ws://localhost:8000/ws/audio');
     const [receivedText, setReceivedText] = useState('');
     const [liveUpdate, setLiveUpdate] = useState(''); // State for live update
     const [chunkCount, setChunkCount] = useState(0); // State to track the chunk count
@@ -22,12 +21,18 @@ function AudioRecorderPage() {
         const ws = new WebSocket(websocketEndpoint);
 
         ws.onopen = () => {
+        console.log('WebSocket Connected');
         ws.binaryType = 'blob';
         setWebsocket(ws);
         };
 
         ws.onclose = () => {
+        console.log('WebSocket Disconnected');
         setWebsocket(null);
+        };
+
+        ws.onerror = (error) => {
+            console.error('WebSocket Error:', error);
         };
     }, [websocketEndpoint]);
 
@@ -47,8 +52,7 @@ function AudioRecorderPage() {
             // Check if the received data is an audio chunk
             if (data instanceof Blob) {
             setAudioChunks((prevChunks) => [...prevChunks, data]);
-            // playAudio(data); // Play the received audio chunk
-            // playAudio(data);
+
             } else {
             console.log('Received text data:', data);
             }
@@ -70,10 +74,9 @@ function AudioRecorderPage() {
                 chunks.push(chunk);
     
                 if (websocket) {
+                console.log('Sending message:', chunk);
                 // Send the captured chunk to the WebSocket server
                 websocket.send(chunk);
-                // setLiveUpdate('Chunk sent to server ' + (chunkCount + 1)); // Increment chunk count
-                // setChunkCount(chunkCount + 1); // Update chunk count
                 }
             }
             };
@@ -83,7 +86,6 @@ function AudioRecorderPage() {
             const audioBlob = new Blob(chunks, { type: 'audio/wav' });
             const url = URL.createObjectURL(audioBlob);
             setAudioURL(url);
-            // playAudio(audioBlob);
             };
     
             mediaRecorder.start(1000);
