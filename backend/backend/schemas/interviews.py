@@ -3,6 +3,7 @@ from mongoengine import (
     StringField,
     DateTimeField,
     ListField,
+    IntField,
     EmbeddedDocument,
     EmbeddedDocumentField,
 )
@@ -26,7 +27,9 @@ class InterviewTypeDocument(Document, _InterviewTypeBase):
 class ConversationEntryEmbedded(EmbeddedDocument):
     role = StringField(required=True, choices=("interviewer", "candidate"))
     message = StringField(required=True)
-    timestamp = DateTimeField(required=True)
+    tokens = IntField(required=True)
+    start_timestamp = DateTimeField(required=True)
+    end_timestamp = DateTimeField(required=True)
 
 
 class InterviewSessionDocument(Document):
@@ -34,6 +37,8 @@ class InterviewSessionDocument(Document):
     user_id = StringField(required=True)
     start_time = DateTimeField(required=True)
     end_time = DateTimeField(required=True)
+    total_input_tokens = IntField(required=True)
+    total_output_tokens = IntField(required=True)
     conversation_history = ListField(EmbeddedDocumentField(ConversationEntryEmbedded))
 
     meta = {
