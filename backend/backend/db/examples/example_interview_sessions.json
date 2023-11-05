@@ -11,31 +11,6 @@
         "end_time": "2021-05-01 12:30:00",
         "total_input_tokens": 625,
         "total_output_tokens": 280,
-        "conversation_history": [
-            {
-                "role": "system",
-                "message": "You are to act as an Interviewer and interview me for a product sense interview. Your first message should be a reply introducing the interview and telling me the problem.",
-                "tokens": 44,
-                "start_timestamp": "2021-05-01 11:59:00",
-                "end_timestamp": "2021-05-01 12:00:00",
-                "model": "gpt-3.5-turbo"
-            },
-            {
-                "role": "interviewer",
-                "message": "Hello and welcome to the Product Sense interview! I'll be your interviewer today, and I'm excited to learn more about your product sense and problem-solving skills. For this interview, we'll focus on a hypothetical problem related to a product. Imagine you are the product manager for a popular ride-sharing app like Uber or Lyft. The problem we'll discuss is as follows: Problem Statement: Our ride-sharing app has been facing a decline in user engagement and retention over the past few months. We need to identify the root causes and come up with potential solutions to address this issue. Your goal as the product manager is to analyze the situation, propose actionable strategies, and prioritize them to improve user engagement and retention. Throughout this interview, I'll ask you a series of questions to assess your product sense and problem-solving abilities. Please feel free to ask for clarification or additional information at any point, and don't hesitate to share your thoughts and reasoning as we work through the problem. Let's get started! To begin, could you please share your initial thoughts on how you might approach this problem?",
-                "tokens": 257,
-                "start_timestamp": "2021-05-01 12:00:00",
-                "end_timestamp": "2021-05-01 12:01:00",
-                "model": "gpt-3.5-turbo"
-            },
-            {
-                "role": "candidate",
-                "message": "Thank you for presenting the problem. To approach this decline in user engagement and retention, I would start by gathering data and conducting user research to understand the root causes. This would include analyzing user feedback, app usage metrics, and conducting surveys or interviews with both active and lapsed users. Once I have a better understanding of the problem, I would prioritize potential solutions. Some initial ideas that come to mind include: Enhanced Personalization: We could improve the app's recommendation algorithms to provide more personalized and relevant ride suggestions based on user preferences and past behavior. Incentivized Loyalty Programs: Implementing a loyalty program that rewards users for frequent app usage, such as discounts, free rides, or exclusive benefits for loyal customers. Improved User Support: Enhancing our customer support to address user issues and concerns more effectively, reducing user frustration and increasing satisfaction. Gamification: Incorporating gamification elements into the app to make the experience more enjoyable and engaging, such as earning badges, completing challenges, or competing with friends. App Performance Optimization: Ensuring the app runs smoothly with fast loading times and minimal glitches to provide a seamless experience.",
-                "tokens": 280,
-                "start_timestamp": "2021-05-01 12:01:00",
-                "end_timestamp": "2021-05-01 12:01:00",
-                "model": "NA"
-            }
-        ]
+        "conversation_history": []
     }
 ]

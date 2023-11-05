@@ -30,7 +30,6 @@ class GPTMessages(BaseModel):
         cls, interview_session: InterviewSessionDocument
     ) -> "GPTMessages":
         """Creates a GPTMessages object from a list of ConversationEntryEmbedded objects"""
-        print(interview_session)
         conversation_history = interview_session.conversation_history
         init_prompt = interview_session.interview_type.init_prompt
         gpt_message_entries = []

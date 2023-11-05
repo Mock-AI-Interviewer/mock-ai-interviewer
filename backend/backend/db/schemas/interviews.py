@@ -1,3 +1,4 @@
+from enum import Enum, auto
 from mongoengine import (
     Document,
     StringField,
@@ -8,24 +9,32 @@ from mongoengine import (
     EmbeddedDocumentField,
 )
 
+
+class ConversationEntryRole(Enum):
+    INTERVIEWER = "interviewer"
+    CANDIDATE = "candidate"
+    SYSTEM = "system"
+
+
 class InterviewTypeBase:
     name = StringField(required=True)
     description = StringField(required=True)
     job_description = StringField(required=True)
     init_prompt = StringField(required=True)
 
+
 class InterviewTypeEmbedded(EmbeddedDocument, InterviewTypeBase):
     pass
 
+
 class InterviewTypeDocument(Document, InterviewTypeBase):
-    meta = {
-        'collection': 'interview_types',
-        'indexes': ['name']
-    }
+    meta = {"collection": "interview_types", "indexes": ["name"]}
 
 
 class ConversationEntryEmbedded(EmbeddedDocument):
-    role = StringField(required=True, choices=("interviewer", "candidate", "system"))
+    role = StringField(
+        required=True, choices=tuple(choice.value for choice in ConversationEntryRole)
+    )
     message = StringField(required=True)
     tokens = IntField(required=True)
     start_timestamp = DateTimeField(required=True)

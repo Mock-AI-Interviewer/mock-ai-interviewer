@@ -26,7 +26,6 @@ def insert_example_interview_session():
     with open(json_file_path, "r") as file:
         data = json.load(file)
     for item in data:
-        LOGGER.info(item)
         session = InterviewSessionDocument(
             **item
         ).save()  # The collection is created here if it doesn"t exist
@@ -45,7 +44,9 @@ def insert_example_interview_types():
         session.save()  # The collection is created here if it doesn"t exist
         LOGGER.info(f"Inserted example interview type with id {session.id}")
 
-
-if __name__ == "__main__":
+def initialise_db():
     insert_example_interview_session()
     insert_example_interview_types()
+
+if __name__ == "__main__":
+    initialise_db

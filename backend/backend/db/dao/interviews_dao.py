@@ -12,7 +12,7 @@ def get_all_interview_types() -> List[InterviewTypeDocument]:
     return list(InterviewTypeDocument.objects.all())
 
 
-def add_conversation_entry_to_session(
+def add_message_to_interview_session(
     session_id: str, conversation_entry: ConversationEntryEmbedded
 ) -> None:
     interview_session = InterviewSessionDocument.objects.with_id(session_id)
@@ -20,3 +20,6 @@ def add_conversation_entry_to_session(
         raise ValueError("Interview session not found.")
     interview_session.conversation_history.append(conversation_entry)
     interview_session.save()
+
+def get_last_generated_interview_session() -> Optional[InterviewSessionDocument]:
+    return InterviewSessionDocument.objects.order_by("-id").first()
