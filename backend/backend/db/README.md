@@ -1,6 +1,7 @@
 # Database README
 
 - MongoDB is used as the database for this project
+- For all the scripts here remember you need you poetry environment activate (e.g. `poetry shell`)
 
 ## Connecting and Viewing the Database
 
@@ -10,13 +11,16 @@
   - `mongodb://localhost:27017`
   - This is the default connection string for MongoDB
 
-
 ## Initialising Database
 
-- Once connected you can run `poetry run ./migration/intiailise_db.py` to initialise the databse with the default example data found in `./examples`
+- Once connected you can run `python ./migration/intiailise_db.py` to initialise the databse with the default example data found in `./examples`
 - Afterwards you should be able to use mongo compass to see the data. An example of this is shown in the image below:
 - ![Mongo Compass Example](./images/db-initialised-example.png)
 
+## Clearing Database
+
+- To clear the database you can run `python ./migration/drop_all_collections.py`
+- This clears all the collections in the database
 
 ## Example Data
 
@@ -26,7 +30,6 @@ The different collections currently are:
 
 - **Interview Types**
   - A collection of documents showing the different interview types as well as other associated metadata
-
 
 - **Interview Sessions**
   - A collection of documents showing example interview sessions

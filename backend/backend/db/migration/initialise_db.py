@@ -8,17 +8,14 @@ import json
 import logging
 import os
 
-from mongoengine import connect
+from backend.conf import get_root_package_path, initialise_app
+from backend.db.schemas.interviews import (
+    InterviewSessionDocument,
+    InterviewTypeDocument,
+)
 
-from backend.conf import get_root_package_path
-from backend.db.schemas.interviews import (InterviewSessionDocument,
-                                           InterviewTypeDocument)
-
+initialise_app()
 LOGGER = logging.getLogger(__name__)
-
-# Connect to MongoDB (it will create a new database if it doesn"t exist)
-db_name = "interview_db"
-connect(db_name, host="localhost", port=27017)
 
 
 def insert_example_interview_session():

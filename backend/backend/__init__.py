@@ -1,3 +1,3 @@
-from backend.conf import initialise
+from backend.conf import initialise_app
 
-initialise()
+initialise_app()
