@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .websocket_routes import websocket_routes
-from .html_templates import html_templates
+from backend.routes.websocket_routes import websocket_routes
+from backend.html_templates import html_templates
 
 app = FastAPI()
 
