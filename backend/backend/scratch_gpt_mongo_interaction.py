@@ -39,7 +39,7 @@ def handle_llm_response():
 
     llm_response = LLMClient.get_response_in_sentences(
         messages=curr_message_hist,
-        max_tokens=100,
+        max_tokens=200,
     )
     full_text = []
     for sentance in llm_response:
