@@ -5,6 +5,7 @@ import json
 import openai
 from dotenv import load_dotenv
 from mongoengine import connect
+from elevenlabs import set_api_key
 
 
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -21,6 +22,7 @@ def initialise_app():
     setup_db_connection()
     setup_openai()
     setup_google()
+    setup_elevn_labs()
 
 
 def setup_logging():
@@ -66,6 +68,8 @@ def setup_google():
         config
     )
 
+def setup_elevn_labs():
+    set_api_key(get_eleven_labs_api_key())
 
 def get_root_package_path():
     return os.path.dirname(os.path.realpath(__file__))
