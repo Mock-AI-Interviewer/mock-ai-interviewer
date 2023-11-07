@@ -5,27 +5,28 @@ import os
 
 import aiofiles
 from fastapi import APIRouter, FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
 
-# from backend.google.client import transcribe_audio_chunk
+from backend.conf import get_root_package_path, initialise_app
+
+initialise_app()
 
 LOGGER = logging.getLogger(__name__)
+ROUTER_PREFIX = "/candidate"
+WEBSOCKET_PREFIX = "/audio"
+TEMPLATE_PATH = os.path.join(
+    get_root_package_path(), "html_templates", "candidate.html"
+)
+AUDIO_FILES_DIRECTORY = get_root_package_path()
+
 router = APIRouter(
-    prefix="/ws",
-    tags=["Web Sockets"],
+    prefix=ROUTER_PREFIX,
     responses={},
 )
-
-
 audio_buffer = io.BytesIO()
 
-# Define a path for saving the audio file
-AUDIO_FILES_DIRECTORY = "/tmp/audio"
-os.makedirs(
-    AUDIO_FILES_DIRECTORY, exist_ok=True
-)  # Create the directory if it does not exist
 
-
-@router.websocket("/audio")
+@router.websocket(WEBSOCKET_PREFIX)
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     global audio_buffer  # Use the global buffer
@@ -95,3 +96,12 @@ async def process_audio():
         # If buffer is empty, log the information and return a message
         LOGGER.info("Audio buffer is empty. No audio data to save.")
         return {"message": "No audio data to process."}
+
+
+@router.get("/")
+async def get():
+    with open(TEMPLATE_PATH, "r") as f:
+        html_content = f.read()
+        web_socket_endpoint = ROUTER_PREFIX + WEBSOCKET_PREFIX
+        html_content = html_content.replace("/<---WEBSOCKET_ENDPOINT--->/", web_socket_endpoint)
+        return HTMLResponse(content=html_content)

@@ -1,40 +1,4 @@
-import logging
-
-from elevenlabs import generate, play, set_api_key, stream
-from fastapi import APIRouter, FastAPI, WebSocket
-from fastapi.responses import HTMLResponse
-
-from backend.conf import get_eleven_labs_api_key, initialise_app
-
-initialise_app()
-LOGGER = logging.getLogger(__name__)
-
-router = APIRouter(
-    prefix="/conversation",
-    tags=["Web Sockets"],
-    responses={},
-)
-
-
-# WebSocket endpoint
-@router.websocket("/response")
-async def websocket_endpoint(websocket: WebSocket):
-    LOGGER.info("--------------WebSocket connection established--------------")
-    await websocket.accept()
-    num_chunks = 0
-    for audio_chunk in generate("Hey, I've added some changes that i wasn't planning to merge to main so soon.", stream=True):
-        LOGGER.info(f"Received audio chunk of size: {len(audio_chunk)}")
-        num_chunks += 1
-        await websocket.send_bytes(audio_chunk)
-    LOGGER.info(f"Number of chunks: {num_chunks}")
-    await websocket.close()
-
-
-# HTML response to serve the client page
-@router.get("/")
-async def get():
-    html_content = """
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <title>Audio Stream</title>
@@ -53,7 +17,7 @@ async def get():
                 await audioContext.resume();
             }
 
-            const ws = new WebSocket(`ws://${location.host}/conversation/response`);
+            const ws = new WebSocket(`ws://${location.host}/<---WEBSOCKET_ENDPOINT--->/`);
             ws.binaryType = 'arraybuffer';
             ws.onmessage = async (event) => {
                 audioQueue.push(event.data);
@@ -63,7 +27,7 @@ async def get():
             };
         });
 
-        let bufferThreshold = 30; // Number of chunks to buffer before playing
+        let bufferThreshold = 1; // Number of chunks to buffer before playing
         let isBuffering = true; // New flag to manage the buffering state
 
         async function playAudioQueue() {
@@ -113,6 +77,3 @@ async def get():
     </script>
 </body>
 </html>
-
-    """
-    return HTMLResponse(content=html_content)

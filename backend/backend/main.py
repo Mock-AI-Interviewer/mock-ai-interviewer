@@ -1,14 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routers.websockets import router as websocket_router
-from backend.routers.base import router as base_router
-from backend.routers.conversation import router as conversation_router
+from backend.routers.candidate import router as candidate_speaking_router
+from backend.routers.interviewer import router as interviewer_speaking_router
 
 app = FastAPI()
 
-app.include_router(websocket_router)
-app.include_router(base_router)
-app.include_router(conversation_router)
+app.include_router(candidate_speaking_router)
+app.include_router(interviewer_speaking_router)
 
 app.add_middleware(
     CORSMiddleware,
