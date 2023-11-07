@@ -1,25 +1,31 @@
-from fastapi import FastAPI, APIRouter, WebSocket, WebSocketDisconnect
-from backend.speech_client import transcribe_audio_chunk
 import asyncio
-import logging
 import io
+import logging
 import os
+
 import aiofiles
+from fastapi import APIRouter, FastAPI, WebSocket, WebSocketDisconnect
 
+# from backend.google.client import transcribe_audio_chunk
 
-logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
-app = FastAPI()
-websocket_routes = APIRouter()
+router = APIRouter(
+    prefix="/ws",
+    tags=["Web Sockets"],
+    responses={},
+)
+
 
 audio_buffer = io.BytesIO()
 
 # Define a path for saving the audio file
 AUDIO_FILES_DIRECTORY = "/tmp/audio"
-os.makedirs(AUDIO_FILES_DIRECTORY, exist_ok=True)  # Create the directory if it does not exist
+os.makedirs(
+    AUDIO_FILES_DIRECTORY, exist_ok=True
+)  # Create the directory if it does not exist
 
 
-@websocket_routes.websocket("/ws/audio")
+@router.websocket("/audio")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     global audio_buffer  # Use the global buffer
@@ -36,7 +42,7 @@ async def websocket_endpoint(websocket: WebSocket):
             # Send back the transcribed text to the client
             # for text in transcripts:
             #     LOGGER.info(text)
-                # await websocket.send_text(text)
+            # await websocket.send_text(text)
 
             # For example, you can send it back to the client
             await websocket.send_bytes(audio_chunk)
@@ -48,8 +54,9 @@ async def websocket_endpoint(websocket: WebSocket):
         if audio_buffer:  # If there are any chunks collected, process them
             await process_audio()
 
+
 # Add a new endpoint to trigger processing
-@app.post("/process_audio")
+@router.post("/process_audio")
 async def process_audio():
     global audio_buffer
     # Ensure we read from the beginning of the buffer
@@ -64,7 +71,7 @@ async def process_audio():
         # text_file_path = text_file_name
 
         # Save the buffer to a file
-        async with aiofiles.open(file_path, 'wb') as audio_file:
+        async with aiofiles.open(file_path, "wb") as audio_file:
             await audio_file.write(audio_buffer.getvalue())
 
         LOGGER.info(f"Saved the audio to {file_path}")

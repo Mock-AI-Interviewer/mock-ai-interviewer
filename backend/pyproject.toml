@@ -19,6 +19,7 @@ elevenlabs = "^0.2.26"
 google-cloud-speech = "^2.21.1"
 python-multipart = "^0.0.6"
 asyncio = "^3.4.3"
+aiofiles = "^23.2.1"
 
 [build-system]
 requires = ["poetry-core"]

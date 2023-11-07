@@ -9,14 +9,7 @@ from mongoengine import connect
 
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
 
-
-def get_google_service_account_credentials():
-    client_file = "sa-mock-ai-interviewer.json"
-
-    with open(client_file, "r") as file:
-        config = json.load(file)
-    config["private_key"] = os.getenv("PRIVATE_KEY").replace("\\n", "\n")
-    credentials = service_account.Credentials.from_service_account_file(config)
+_google_sa_credentials = None
 
 
 def setup_logging():
@@ -48,6 +41,21 @@ def setup_openai():
     openai.api_key = get_openai_api_key()
 
 
+def setup_google():
+    """Load Google Service Account Credentials"""
+    client_file = get_google_service_account_file_path()
+    with open(client_file, "r") as file:
+        config = json.load(file)
+
+    config["private_key"] = get_google_service_account_private_key()
+    config["private_key_id"] = get_google_service_account_private_key_id()
+
+    global _google_sa_credentials
+    _google_sa_credentials = service_account.Credentials.from_service_account_info(
+        config
+    )
+
+
 def initialise_app():
     """Initialise the application"""
     setup_logging()
@@ -55,6 +63,7 @@ def initialise_app():
 
     setup_db_connection()
     setup_openai()
+    setup_google()
 
 
 def get_root_package_path():
@@ -84,3 +93,22 @@ def get_openai_model():
 
 def get_eleven_labs_api_key():
     return os.getenv("ELEVEN_LABS_API_KEY")
+
+
+def get_google_credentials():
+    global _google_sa_credentials
+    if _google_sa_credentials is None:
+        _google_sa_credentials = setup_google()
+    return _google_sa_credentials
+
+
+def get_google_service_account_file_path():
+    return os.path.join(get_root_package_path(), "google", "service_account.json")
+
+
+def get_google_service_account_private_key():
+    return os.getenv("GOOGLE_SA_PRIVATE_KEY")
+
+
+def get_google_service_account_private_key_id():
+    return os.getenv("GOOGLE_SA_PRIVATE_KEY_ID")

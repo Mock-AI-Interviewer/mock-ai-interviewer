@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 
-html_templates = APIRouter()
+router = APIRouter()
 
 html = """
 <!DOCTYPE html>
@@ -34,6 +34,7 @@ function stopWebSocket() {
 </html>
 """
 
-@html_templates.get("/")
+
+@router.get("/")
 async def get():
     return HTMLResponse(html)
