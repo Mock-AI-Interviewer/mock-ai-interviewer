@@ -1,9 +1,22 @@
 import logging
 import os
-
+from google.oauth2 import service_account
+import json
 import openai
 from dotenv import load_dotenv
 from mongoengine import connect
+
+
+ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
+
+
+def get_google_service_account_credentials():
+    client_file = "sa-mock-ai-interviewer.json"
+
+    with open(client_file, "r") as file:
+        config = json.load(file)
+    config["private_key"] = os.getenv("PRIVATE_KEY").replace("\\n", "\n")
+    credentials = service_account.Credentials.from_service_account_file(config)
 
 
 def setup_logging():
@@ -67,6 +80,7 @@ def get_openai_organisation():
 
 def get_openai_model():
     return os.getenv("OPENAI_MODEL")
+
 
 def get_eleven_labs_api_key():
     return os.getenv("ELEVEN_LABS_API_KEY")

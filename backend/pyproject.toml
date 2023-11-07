@@ -2,13 +2,13 @@
 name = "backend"
 version = "0.1.0"
 description = ""
-authors = ["vdeoli01 <vdeoli01@student.bbk.ac.uk>"]
+authors = ["BossCodersHQ <nyakundi@hotmail.co.uk>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
 fastapi = "^0.101.1"
-uvicorn = "^0.23.2"
+uvicorn = {extras = ["standard"], version = "^0.23.2"}
 pytest = "^7.4.2"
 pydantic = "^2.4.2"
 mongoengine = "^0.27.0"
@@ -16,7 +16,9 @@ openai = "^0.28.1"
 python-dotenv = "^1.0.0"
 tiktoken = "^0.5.1"
 elevenlabs = "^0.2.26"
-
+google-cloud-speech = "^2.21.1"
+python-multipart = "^0.0.6"
+asyncio = "^3.4.3"
 
 [build-system]
 requires = ["poetry-core"]
