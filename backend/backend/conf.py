@@ -12,6 +12,17 @@ ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
 _google_sa_credentials = None
 
 
+def initialise_app():
+    """Initialise the application"""
+    setup_logging()
+    setup_env_variables()
+
+    # Setup External Services
+    setup_db_connection()
+    setup_openai()
+    setup_google()
+
+
 def setup_logging():
     """Setup logging configuration"""
     logging.basicConfig(
@@ -54,16 +65,6 @@ def setup_google():
     _google_sa_credentials = service_account.Credentials.from_service_account_info(
         config
     )
-
-
-def initialise_app():
-    """Initialise the application"""
-    setup_logging()
-    setup_env_variables()
-
-    setup_db_connection()
-    setup_openai()
-    setup_google()
 
 
 def get_root_package_path():
