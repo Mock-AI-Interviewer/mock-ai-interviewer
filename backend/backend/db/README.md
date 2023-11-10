@@ -13,7 +13,7 @@
 
 ## Initialising Database
 
-- Once connected you can run `python ./migration/intiailise_db.py` to initialise the databse with the default example data found in `./examples`
+- Once connected you can run `python ./migration/reset.py` to clear the databse and add the default examples found in `./examples`
 - Afterwards you should be able to use mongo compass to see the data. An example of this is shown in the image below:
 - ![Mongo Compass Example](./images/db-initialised-example.png)
 
