@@ -17,7 +17,7 @@
                 await audioContext.resume();
             }
 
-            const ws = new WebSocket(`ws://${location.host}/<---WEBSOCKET_ENDPOINT--->/`);
+            const ws = new WebSocket(`ws://${location.host}{{ websocket_endpoint }}`);
             ws.binaryType = 'arraybuffer';
             ws.onmessage = async (event) => {
                 audioQueue.push(event.data);

@@ -2,10 +2,10 @@ import logging
 import os
 
 from elevenlabs import generate, play, set_api_key, stream
-from fastapi import APIRouter, FastAPI, WebSocket
+from fastapi import APIRouter, FastAPI, WebSocket, Request
 from fastapi.responses import HTMLResponse
-
-from backend.conf import get_eleven_labs_api_key, get_root_package_path, initialise_app
+from fastapi.templating import Jinja2Templates
+from backend.conf import get_eleven_labs_api_key, get_root_package_path, initialise_app, get_jinja_templates_path
 
 initialise_app()
 
@@ -24,7 +24,7 @@ router = APIRouter(
     prefix=ROUTER_PREFIX,
     responses={},
 )
-
+templates = Jinja2Templates(directory=get_jinja_templates_path())
 
 # WebSocket endpoint
 @router.websocket(WEBSOCKET_PREFIX)
@@ -52,10 +52,9 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 @router.get("/")
-async def get():
-    with open(TEMPLATE_PATH, "r") as f:
-        html_content = f.read()
-        web_socket_endpoint = ROUTER_PREFIX + WEBSOCKET_PREFIX
-        html_content = html_content.replace("/<---WEBSOCKET_ENDPOINT--->/", web_socket_endpoint)
-        return HTMLResponse(content=html_content)
-
+async def get(request: Request):
+    web_socket_endpoint = ROUTER_PREFIX + WEBSOCKET_PREFIX
+    return templates.TemplateResponse(
+        "interviewer.html", 
+        {"request": request, "websocket_endpoint": web_socket_endpoint}
+    )

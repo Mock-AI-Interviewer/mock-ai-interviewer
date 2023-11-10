@@ -4,10 +4,10 @@ import logging
 import os
 
 import aiofiles
-from fastapi import APIRouter, FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.responses import HTMLResponse
-
-from backend.conf import get_root_package_path, initialise_app
+from fastapi.templating import Jinja2Templates
+from backend.conf import get_root_package_path, initialise_app, get_jinja_templates_path
 
 initialise_app()
 
@@ -24,6 +24,7 @@ router = APIRouter(
     responses={},
 )
 audio_buffer = io.BytesIO()
+templates = Jinja2Templates(directory=get_jinja_templates_path())
 
 
 @router.websocket(WEBSOCKET_PREFIX)
@@ -99,9 +100,9 @@ async def process_audio():
 
 
 @router.get("/")
-async def get():
-    with open(TEMPLATE_PATH, "r") as f:
-        html_content = f.read()
-        web_socket_endpoint = ROUTER_PREFIX + WEBSOCKET_PREFIX
-        html_content = html_content.replace("/<---WEBSOCKET_ENDPOINT--->/", web_socket_endpoint)
-        return HTMLResponse(content=html_content)
+async def get(request: Request):
+    web_socket_endpoint = ROUTER_PREFIX + WEBSOCKET_PREFIX
+    return templates.TemplateResponse(
+        "candidate.html",
+        {"request": request, "websocket_endpoint": web_socket_endpoint},
+    )
