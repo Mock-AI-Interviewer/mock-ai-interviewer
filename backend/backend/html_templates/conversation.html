@@ -2,35 +2,151 @@
 <html lang="en">
 
 <head>
-    <title>Audio Stream</title>
-</head>
+    <title>Mock AI Interviewer</title>
+    <style>
+        /* Additional styles to make the textarea larger and to style the button */
+        #userInput {
+            width: 50%;
+            /* Width of the text area */
+            height: 150px;
+            /* Initial height of the text area */
+            resize: both;
+            /* Allows both horizontal and vertical resizing */
+            margin-bottom: 10px;
+            /* Spacing between the textarea and the button */
+        }
 
-<body>
-    <button id="startButton">Start Audio</button>
+        button {
+            padding: 10px 20px;
+            /* Padding inside the button */
+            font-size: 1em;
+            /* Button font size */
+            cursor: pointer;
+            /* Changes the cursor to a pointer when hovering over the button */
+        }
+
+        #stopButton {
+            background-color: red;
+            color: white;
+            border: none;
+        }
+
+        .button-container {
+            display: flex;
+            /* Uses flexbox to keep buttons on the same line */
+            justify-content: center;
+            /* Centers buttons in the container */
+            gap: 10px;
+            /* Adds space between the buttons */
+        }
+
+        #interviewerTextbox {
+            max-height: 300px;
+            /* Adjust the height as needed */
+            overflow-y: auto;
+            /* This makes the div scrollable */
+            white-space: pre-wrap;
+            /* This ensures text wraps and respects new lines */
+            border: 1px solid #ccc;
+            /* Optional: adds a border to the div */
+            padding: 10px;
+            /* Optional: adds some padding inside the div */
+        }
+    </style>
     <script>
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const audioQueue = [];
         let isPlaying = false;
-
-        const startButton = document.getElementById('startButton');
-
-        startButton.addEventListener('click', async () => {
-            if (audioContext.state === 'suspended') {
-                await audioContext.resume();
-            }
-
-            const ws = new WebSocket(`ws://${location.host}{{ websocket_endpoint }}/?user_id={{ user_id }}&enable_audio_input={{ enable_audio_input }}&enable_audio_ouput={{ enable_audio_output }}`);
-            ws.binaryType = 'arraybuffer';
-            ws.onmessage = async (event) => {
-                audioQueue.push(event.data);
-                if (!isPlaying) {
-                    playAudioQueue();
-                }
-            };
-        });
-
         let bufferThreshold = 1; // Number of chunks to buffer before playing
         let isBuffering = true; // New flag to manage the buffering state
+        let nextTime = 0; // Tracks when the next audio chunk should start.
+        let webSocket;
+        const enableAudioInput = '{{ enable_audio_input }}' == true;
+        const enableAudioOutput = '{{ enable_audio_output }}' == true;
+        const STOP_MESSAGE = '{{ stop_message }}'
+
+
+        webSocket = createWebSocket();
+
+
+        function createWebSocket() {
+            if (webSocket != undefined) {
+                return webSocket;
+            }
+            console.log('Creating webSocket')
+            const ws = new WebSocket(`ws://${location.host}{{ websocket_endpoint }}?user_id={{ user_id }}&enable_audio_input=${enableAudioInput}&enable_audio_ouput=${enableAudioOutput}`);
+            ws.binaryType = 'arraybuffer';
+            ws.onopen = function (event) {
+                console.log('Connection opened', event);
+            };
+            ws.onerror = function (event) {
+                console.error('WebSocket error observed:', event);
+            };
+
+            ws.onclose = function (event) {
+                console.log('WebSocket is closed now.', event);
+            };
+            ws.onmessage = async (event) => {
+                console.log('Message recieved', event)
+                if (!enableAudioOutput) {
+                    recieveText(event);
+                } else {
+                    recieveAudio(event);
+                }
+
+            };
+            console.log('Creating websocket: new webSocket', ws);
+            return ws;
+        }
+
+        function stopWebSocket() {
+            webSocket.close();
+        }
+
+
+        function sendText() {
+            const text = document.getElementById('userInput').value;
+
+            // Handle updates to interviewer textbox
+            const interviewerTextbox = document.getElementById('interviewerTextbox');
+            interviewerTextbox.innerText += '\nYou: ' + text + '\n';
+
+            // Send text to server
+            console.log("Sending text: ", text);
+            webSocket.send(text);
+            webSocket.send(STOP_MESSAGE);
+            updateTurnAlert("Interviewer's Turn")
+            document.getElementById('userInput').value = '';
+        }
+
+        function recieveText(event) {
+            const interviewerTextbox = document.getElementById('interviewerTextbox');
+            const text = event.data;
+
+            if (text == STOP_MESSAGE) {
+                console.log("Recieved stop message");
+                updateTurnAlert("Your Turn")
+                return;
+            }
+
+            console.log("Recieved text: ", text);
+            interviewerTextbox.innerText += text;
+            interviewerTextbox.scrollTop = interviewerTextbox.scrollHeight; // Scroll to the bottom of the div
+        }
+
+        function updateTurnAlert(turn) {
+            const turnAlert = document.getElementById('turnAlert');
+            turnAlert.innerText = turn;
+        }
+
+        function recieveAudio(event) {
+            const audioData = event.data;
+            audioQueue.push(audioData);
+            if (!isPlaying) {
+                playAudioQueue(); // Try to play the queue if not already playing
+            }
+        }
+
 
         async function playAudioQueue() {
             // Start playing if we've reached the buffer threshold or if we're already playing and more data is available
@@ -46,9 +162,6 @@
                 isPlaying = false; // Set to false when the queue is empty
             }
         }
-
-
-        let nextTime = 0; // Tracks when the next audio chunk should start.
 
         async function playAudioChunk(audioData) {
             try {
@@ -70,12 +183,41 @@
             }
         }
 
-        ws.onmessage = async (event) => {
-            audioQueue.push(event.data);
-            if (!isPlaying) {
-                playAudioQueue(); // Try to play the queue if not already playing
+    </script>
+</head>
+
+<body>
+    <div style="text-align: center; margin-top: 100px;">
+        <h1>Mock AI Interviewer</h1>
+        <div>
+            <h3>Transcript:</h3>
+            <div id="interviewerTextbox"></div>
+            <h3 id="turnAlert">Interviewers Turn</h3>
+        </div>
+        <input type="text" id="userInput" placeholder="Type something...">
+        <br><br>
+        <div class="button-container">
+            <button id="startButton">Send</button>
+            <button id="stopButton">Stop Interview</button>
+        </div>
+    </div>
+
+    <script>
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+
+        startButton.addEventListener('click', async () => {
+            if (audioContext.state === 'suspended') {
+                await audioContext.resume();
             }
-        };
+            webSocket = createWebSocket();
+            sendText();
+        });
+
+        stopButton.addEventListener('click', () => {
+            stopWebSocket();
+        });
+
     </script>
 </body>
 
