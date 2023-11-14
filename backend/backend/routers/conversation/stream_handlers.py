@@ -1,30 +1,19 @@
-import asyncio
-import io
 import logging
-import os
-from dataclasses import dataclass
 from datetime import datetime
-from typing import Iterator, List, Union
 
-import aiofiles
-from fastapi import (APIRouter, FastAPI, Query, Request, WebSocket,
-                     WebSocketDisconnect)
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
+from fastapi import WebSocket
 
-import backend.eleven_labs.client as TTSClient
-import backend.openai.client as LLMClient
-from backend.conf import (get_jinja_templates_path, get_openai_api_key,
-                          get_openai_model, get_openai_organisation,
-                          get_root_package_path, initialise_app)
-from backend.constants import STOP_MESSAGE_PATTERN
+from backend.conf import get_openai_model
 from backend.db.dao import interviews_dao
-from backend.db.schemas.interviews import (ConversationEntryEmbedded,
-                                           ConversationEntryRole)
-from backend.openai.models import GPTMessageEntry, GPTMessages
+from backend.db.schemas.interviews import (
+    ConversationEntryEmbedded,
+    ConversationEntryRole,
+)
+from backend.routers.conversation.models import is_stop_message
 
 LOGGER = logging.getLogger(__name__)
 CURRENT_CONVERSATION = interviews_dao.get_last_generated_interview_session().id
+
 
 async def handle_audio_stream(websocket: WebSocket, user_id: str) -> str:
     """
@@ -87,19 +76,3 @@ async def handle_text_input(user_id: str, text_data: str) -> str:
     """
     LOGGER.info(f"Received text data: {text_data}")
     return text_data
-
-
-def is_stop_message(data: Union[str, bytes]) -> bool:
-    """
-    Checks if the given data is a stop message based on the configured stop message pattern.
-    """
-
-    if isinstance(data, bytes):
-        try:
-            return data.decode("utf-8") == STOP_MESSAGE_PATTERN
-        except UnicodeDecodeError:
-            return False
-    elif isinstance(data, str):
-        return data == STOP_MESSAGE_PATTERN
-
-    return False

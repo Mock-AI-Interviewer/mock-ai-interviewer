@@ -4,34 +4,77 @@ import logging
 import os
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Iterator, List, Union
+from typing import Iterator, List
 
-import aiofiles
-from fastapi import (APIRouter, FastAPI, Query, Request, WebSocket,
-                     WebSocketDisconnect)
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
+from fastapi import WebSocket
 
-import backend.eleven_labs.client as TTSClient
 import backend.openai.client as LLMClient
-from backend.conf import (get_jinja_templates_path, get_openai_api_key,
-                          get_openai_model, get_openai_organisation,
-                          get_root_package_path, initialise_app)
+from backend.conf import get_openai_model
 from backend.db.dao import interviews_dao
-from backend.db.schemas.interviews import (ConversationEntryEmbedded,
-                                           ConversationEntryRole)
-from backend.openai.models import GPTMessageEntry, GPTMessages
-from backend.constants import STOP_MESSAGE_PATTERN
+from backend.db.schemas.interviews import (
+    ConversationEntryEmbedded,
+    ConversationEntryRole,
+)
+from backend.eleven_labs.client import speak_sentence as send_speech
+from backend.openai.models import GPTMessages
+from backend.routers.conversation.models import (
+    InterviewerMessage,
+    MessageType,
+    is_stop_message,
+    send_message,
+)
 
 LOGGER = logging.getLogger(__name__)
 
-ASYNCIO_PAUSE_TIME = 0.1
 CURRENT_CONVERSATION = interviews_dao.get_last_generated_interview_session().id
 
 
-async def generate_response(
-    websocket: WebSocket, enable_audio_output: bool
-) -> None:
+@dataclass
+class InterviewState:
+    web_socket: WebSocket
+    stop_flag: bool = False
+    enable_audio_output: bool = False
+
+
+_stop_flag = False
+
+
+async def send_messages(
+    websocket: WebSocket, llm_response: Iterator, enable_audio_output: bool
+) -> str:
+    """Sends messages to the websocket and returns the full text of the response"""
+    global _stop_flag
+    full_text = []
+    for sentence in llm_response:
+        if _stop_flag:
+            _stop_flag = False
+            break
+        full_text.append(sentence.text)
+        sentence_txt = sentence.text
+        if not enable_audio_output:
+            await send_message(
+                websocket, InterviewerMessage(type=MessageType.TEXT, data=sentence_txt)
+            )
+        else:
+            await send_message(
+                websocket, InterviewerMessage(type=MessageType.TEXT, data=sentence_txt)
+            )
+            await send_speech(websocket=websocket, sentence=sentence_txt)
+    # Send stop message
+    await send_message(websocket, InterviewerMessage(type=MessageType.STOP, data=""))
+    return "".join(full_text)
+
+
+async def listen_for_stop(websocket):
+    global _stop_flag
+    while True:
+        text_data = await websocket.receive_text()
+        if is_stop_message(text_data):
+            _stop_flag = True
+            break
+
+
+async def generate_response(websocket: WebSocket, enable_audio_output: bool) -> None:
     start_time = datetime.now()
 
     # Getting history of messages
@@ -44,20 +87,12 @@ async def generate_response(
         max_tokens=200,
     )
 
-    # Process LLM response sentance by sentance and return
-    full_text = []
-    for sentence in llm_response:
-        full_text.append(sentence.text)
-        sentence_txt = sentence.text
-        if not enable_audio_output:
-            await websocket.send_text(sentence_txt)
-            LOGGER.info(f"Sent text response: {sentence_txt}")
-            await asyncio.sleep(ASYNCIO_PAUSE_TIME)  # TODO #37 This is a temporary solution to allow event loop a chance to send data 
-        else:
-            sentence_txt = TTSClient.clean_sentance(sentence.text)
-            await TTSClient.speak_sentance(sentence_txt)
-    full_text = "".join(full_text)
-    await websocket.send_text(STOP_MESSAGE_PATTERN)
+    # Process LLM response sentence by sentence and return
+    send_task = asyncio.create_task(
+        send_messages(websocket, llm_response, enable_audio_output)
+    )
+    listen_task = asyncio.create_task(listen_for_stop(websocket))
+    full_text, _ = await asyncio.gather(send_task, listen_task)
 
     end_time = datetime.now()
 
@@ -73,7 +108,6 @@ async def generate_response(
             model=get_openai_model(),
         ),
     )
-
 
 
 def generate_gpt_messages(session_id: str) -> List[dict]:

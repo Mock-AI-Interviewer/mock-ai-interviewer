@@ -7,13 +7,11 @@
         /* Additional styles to make the textarea larger and to style the button */
         #userInput {
             width: 50%;
-            /* Width of the text area */
             height: 150px;
-            /* Initial height of the text area */
             resize: both;
-            /* Allows both horizontal and vertical resizing */
             margin-bottom: 10px;
-            /* Spacing between the textarea and the button */
+            overflow: auto;
+            /* Ensures scrollbars appear when needed */
         }
 
         button {
@@ -25,10 +23,21 @@
             /* Changes the cursor to a pointer when hovering over the button */
         }
 
-        #stopButton {
+        #stopInterviewButton {
             background-color: red;
             color: white;
             border: none;
+        }
+
+        #startInterviewButton {
+            background-color: green;
+            color: white;
+            border: none;
+        }
+
+        #interruptInterviewerButton {
+            background-color: orange;
+            color: white;
         }
 
         .button-container {
@@ -68,9 +77,6 @@
         const STOP_MESSAGE = '{{ stop_message }}'
 
 
-        webSocket = createWebSocket();
-
-
         function createWebSocket() {
             if (webSocket != undefined) {
                 return webSocket;
@@ -89,11 +95,13 @@
                 console.log('WebSocket is closed now.', event);
             };
             ws.onmessage = async (event) => {
-                console.log('Message recieved', event)
-                if (!enableAudioOutput) {
-                    recieveText(event);
+                const parsed_data = JSON.parse(event.data);
+                if (parsed_data.type == "audio" && enableAudioOutput) {
+                    recieveAudio(parsed_data.data);
+                } else if (parsed_data.type == "text") {
+                    recieveText(parsed_data.data);
                 } else {
-                    recieveAudio(event);
+                    receiveStop();
                 }
 
             };
@@ -113,27 +121,47 @@
             const interviewerTextbox = document.getElementById('interviewerTextbox');
             interviewerTextbox.innerText += '\n\nYou: ' + text + '\n\n';
 
-            // Send text to server
-            console.log("Sending text: ", text);
-            webSocket.send(text);
-            webSocket.send(STOP_MESSAGE);
+            sendTextMessage(text);
+            sendStopMessage();
             updateTurnAlert("Interviewer's Turn")
             document.getElementById('userInput').value = '';
         }
 
-        function recieveText(event) {
+        function sendTextMessage(text) {
+            const textMessage = {
+                type: "text",
+                data: text
+            };
+            const messageString = JSON.stringify(textMessage);
+            webSocket.send(messageString);
+        }
+
+        function sendStopMessage() {
+            const stopMessage = {
+                type: STOP_MESSAGE,
+                data: ""
+            };
+
+            const messageString = JSON.stringify(stopMessage);
+            webSocket.send(messageString);
+        }
+
+        function recieveText(textData) {
             const interviewerTextbox = document.getElementById('interviewerTextbox');
-            const text = event.data;
-
-            if (text == STOP_MESSAGE) {
-                console.log("Recieved stop message");
-                updateTurnAlert("Your Turn")
-                return;
-            }
-
-            console.log("Recieved text: ", text);
-            interviewerTextbox.innerText += text;
+            interviewerTextbox.innerText += textData;
             interviewerTextbox.scrollTop = interviewerTextbox.scrollHeight; // Scroll to the bottom of the div
+        }
+
+        function receiveStop() {
+            console.log("Recieved stop message");
+            updateTurnAlert("Your Turn")
+        }
+
+        function recieveAudio(encodedAudioData) {
+            audioQueue.push(encodedAudioData);
+            if (!isPlaying) {
+                playAudioQueue(); // Try to play the queue if not already playing
+            }
         }
 
         function updateTurnAlert(turn) {
@@ -141,13 +169,6 @@
             turnAlert.innerText = turn;
         }
 
-        function recieveAudio(event) {
-            const audioData = event.data;
-            audioQueue.push(audioData);
-            if (!isPlaying) {
-                playAudioQueue(); // Try to play the queue if not already playing
-            }
-        }
 
 
         async function playAudioQueue() {
@@ -165,9 +186,20 @@
             }
         }
 
-        async function playAudioChunk(audioData) {
+        async function playAudioChunk(encodedAudioData) {
             try {
-                const decodedData = await audioContext.decodeAudioData(audioData.slice(0));
+                // Step 1: Decode Base64 string to binary data
+                const binaryData = atob(encodedAudioData);
+
+                // Step 2: Convert binary data to ArrayBuffer
+                const length = binaryData.length;
+                const buffer = new ArrayBuffer(length);
+                const view = new Uint8Array(buffer);
+                for (let i = 0; i < length; i++) {
+                    view[i] = binaryData.charCodeAt(i);
+                }
+
+                const decodedData = await audioContext.decodeAudioData(buffer);
                 const source = audioContext.createBufferSource();
                 source.buffer = decodedData;
                 source.connect(audioContext.destination);
@@ -196,29 +228,46 @@
             <div id="interviewerTextbox"></div>
             <h3 id="turnAlert">Interviewers Turn</h3>
         </div>
-        <input type="text" id="userInput" placeholder="Type something...">
+        <textarea type="text" id="userInput" placeholder="Type something..."></textarea>
         <br><br>
-        <div class="button-container">
-            <button id="startButton">Send</button>
-            <button id="stopButton">Stop Interview</button>
+        <div class="button-container" style="margin: 50px;">
+            <button id="sendTextButton">Send</button>
+            <button id="interruptInterviewerButton">Interupt</button>
         </div>
+        <div class="button-container">
+            <button id="startInterviewButton">Start Interview</button>
+            <button id="stopInterviewButton">Stop Interview</button>
+        </div>
+        
     </div>
 
     <script>
-        const startButton = document.getElementById('startButton');
-        const stopButton = document.getElementById('stopButton');
+        const sendTextButton = document.getElementById('sendTextButton');
+        const stopInterviewButton = document.getElementById('stopInterviewButton');
+        const startInterviewButton = document.getElementById('startInterviewButton');
+        const interruptInterviewerButton = document.getElementById('interruptInterviewerButton');
 
-        startButton.addEventListener('click', async () => {
+        sendTextButton.addEventListener('click', async () => {
+            sendText();
+        });
+
+        stopInterviewButton.addEventListener('click', () => {
+            sendStopMessage();
+            stopWebSocket();
+        });
+
+        startInterviewButton.addEventListener('click', async () => {
             if (audioContext.state === 'suspended') {
                 await audioContext.resume();
             }
             webSocket = createWebSocket();
-            sendText();
         });
 
-        stopButton.addEventListener('click', () => {
-            stopWebSocket();
+        interruptInterviewerButton.addEventListener('click', async () => {
+            sendStopMessage();
+            updateTurnAlert("Your Turn")
         });
+
 
     </script>
 </body>
