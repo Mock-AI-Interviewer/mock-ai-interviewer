@@ -24,6 +24,8 @@ from backend.openai.models import GPTMessageEntry, GPTMessages
 from backend.constants import STOP_MESSAGE_PATTERN
 
 LOGGER = logging.getLogger(__name__)
+
+ASYNCIO_PAUSE_TIME = 0.1
 CURRENT_CONVERSATION = interviews_dao.get_last_generated_interview_session().id
 
 
@@ -44,15 +46,16 @@ async def generate_response(
 
     # Process LLM response sentance by sentance and return
     full_text = []
-    for sentance in llm_response:
-        LOGGER.info("LLM Response: " + sentance.text)
-        full_text.append(sentance.text)
-        sentance_txt = TTSClient.clean_sentance(sentance.text)
+    for sentence in llm_response:
+        full_text.append(sentence.text)
+        sentence_txt = sentence.text
         if not enable_audio_output:
-            await websocket.send_text(sentance_txt)
-            LOGGER.info(f"Sent text response: {sentance_txt}")
+            await websocket.send_text(sentence_txt)
+            LOGGER.info(f"Sent text response: {sentence_txt}")
+            await asyncio.sleep(ASYNCIO_PAUSE_TIME)  # TODO #37 This is a temporary solution to allow event loop a chance to send data 
         else:
-            await TTSClient.speak_sentance(sentance_txt)
+            sentence_txt = TTSClient.clean_sentance(sentence.text)
+            await TTSClient.speak_sentance(sentence_txt)
     full_text = "".join(full_text)
     await websocket.send_text(STOP_MESSAGE_PATTERN)
 

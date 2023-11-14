@@ -41,7 +41,7 @@
         }
 
         #interviewerTextbox {
-            max-height: 300px;
+            max-height: 150px;
             /* Adjust the height as needed */
             overflow-y: auto;
             /* This makes the div scrollable */
@@ -109,7 +109,7 @@
 
             // Handle updates to interviewer textbox
             const interviewerTextbox = document.getElementById('interviewerTextbox');
-            interviewerTextbox.innerText += '\nYou: ' + text + '\n';
+            interviewerTextbox.innerText += '\n\nYou: ' + text + '\n\n';
 
             // Send text to server
             console.log("Sending text: ", text);
