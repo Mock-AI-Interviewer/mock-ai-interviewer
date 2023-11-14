@@ -65,7 +65,7 @@ async def get(request: Request):
             "websocket_endpoint": web_socket_endpoint,
             "user_id": "1",
             "enable_audio_input": "false",
-            "enable_audio_output": "false",
+            "enable_audio_output": "true",
             "stop_message": STOP_MESSAGE_PATTERN,
         },
     )

@@ -42,6 +42,8 @@
 
         #interviewerTextbox {
             max-height: 150px;
+            width: 50%;
+            margin: auto;
             /* Adjust the height as needed */
             overflow-y: auto;
             /* This makes the div scrollable */
@@ -61,8 +63,8 @@
         let isBuffering = true; // New flag to manage the buffering state
         let nextTime = 0; // Tracks when the next audio chunk should start.
         let webSocket;
-        const enableAudioInput = '{{ enable_audio_input }}' == true;
-        const enableAudioOutput = '{{ enable_audio_output }}' == true;
+        const enableAudioInput = '{{ enable_audio_input }}' == "true";
+        const enableAudioOutput = '{{ enable_audio_output }}' == "true";
         const STOP_MESSAGE = '{{ stop_message }}'
 
 
@@ -74,7 +76,7 @@
                 return webSocket;
             }
             console.log('Creating webSocket')
-            const ws = new WebSocket(`ws://${location.host}{{ websocket_endpoint }}?user_id={{ user_id }}&enable_audio_input=${enableAudioInput}&enable_audio_ouput=${enableAudioOutput}`);
+            const ws = new WebSocket(`ws://${location.host}{{ websocket_endpoint }}?user_id={{ user_id }}&enable_audio_input=${enableAudioInput}&enable_audio_output=${enableAudioOutput}`);
             ws.binaryType = 'arraybuffer';
             ws.onopen = function (event) {
                 console.log('Connection opened', event);
