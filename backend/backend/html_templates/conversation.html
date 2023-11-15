@@ -117,10 +117,8 @@
         function sendText() {
             const text = document.getElementById('userInput').value;
 
-            // Handle updates to interviewer textbox
             const interviewerTextbox = document.getElementById('interviewerTextbox');
             interviewerTextbox.innerText += '\n\nYou: ' + text + '\n\n';
-
             sendTextMessage(text);
             sendStopMessage();
             updateTurnAlert("Interviewer's Turn")
@@ -134,6 +132,7 @@
             };
             const messageString = JSON.stringify(textMessage);
             webSocket.send(messageString);
+            console.log('Sent message', messageString);
         }
 
         function sendStopMessage() {
@@ -144,6 +143,7 @@
 
             const messageString = JSON.stringify(stopMessage);
             webSocket.send(messageString);
+            console.log('Sent message', messageString);
         }
 
         function recieveText(textData) {
@@ -238,7 +238,7 @@
             <button id="startInterviewButton">Start Interview</button>
             <button id="stopInterviewButton">Stop Interview</button>
         </div>
-        
+
     </div>
 
     <script>

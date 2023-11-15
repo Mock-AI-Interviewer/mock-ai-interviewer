@@ -37,17 +37,24 @@ def encode_to_base64(binary_data):
     return b64encode(binary_data).decode("utf-8")
 
 
-async def send_message(websocket: WebSocket, message: InterviewerMessage) -> None:
+async def send_message(
+    websocket: WebSocket,
+    message: InterviewerMessage,
+    asyncio_pause_time: float = ASYNCIO_PAUSE_TIME,
+) -> None:
     json_string = message.json()
     await websocket.send_text(json_string)
     await asyncio.sleep(
-        ASYNCIO_PAUSE_TIME
+        asyncio_pause_time
     )  # TODO #37 This is a temporary solution to allow event loop a chance to send data
 
 
-def is_stop_message(data: str) -> bool:
+class RecievedStopMessageException(Exception):
+    pass
+
+
+def is_stop_message(candidate_message: CandidateMessage) -> bool:
     """
     Checks if the given data is a stop message based on the type of the message.
     """
-    candidate_message = CandidateMessage.parse_raw(data)
     return candidate_message.type == MessageType.STOP

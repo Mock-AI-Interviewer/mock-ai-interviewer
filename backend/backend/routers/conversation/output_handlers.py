@@ -11,18 +11,14 @@ from fastapi import WebSocket
 import backend.openai.client as LLMClient
 from backend.conf import get_openai_model
 from backend.db.dao import interviews_dao
-from backend.db.schemas.interviews import (
-    ConversationEntryEmbedded,
-    ConversationEntryRole,
-)
+from backend.db.schemas.interviews import (ConversationEntryEmbedded,
+                                           ConversationEntryRole)
 from backend.eleven_labs.client import speak_sentence as send_speech
 from backend.openai.models import GPTMessages
-from backend.routers.conversation.models import (
-    InterviewerMessage,
-    MessageType,
-    is_stop_message,
-    send_message,
-)
+from backend.routers.conversation.models import (CandidateMessage,
+                                                 InterviewerMessage,
+                                                 MessageType, is_stop_message,
+                                                 send_message)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -37,41 +33,6 @@ class InterviewState:
 
 
 _stop_flag = False
-
-
-async def send_messages(
-    websocket: WebSocket, llm_response: Iterator, enable_audio_output: bool
-) -> str:
-    """Sends messages to the websocket and returns the full text of the response"""
-    global _stop_flag
-    full_text = []
-    for sentence in llm_response:
-        if _stop_flag:
-            _stop_flag = False
-            break
-        full_text.append(sentence.text)
-        sentence_txt = sentence.text
-        if not enable_audio_output:
-            await send_message(
-                websocket, InterviewerMessage(type=MessageType.TEXT, data=sentence_txt)
-            )
-        else:
-            await send_message(
-                websocket, InterviewerMessage(type=MessageType.TEXT, data=sentence_txt)
-            )
-            await send_speech(websocket=websocket, sentence=sentence_txt)
-    # Send stop message
-    await send_message(websocket, InterviewerMessage(type=MessageType.STOP, data=""))
-    return "".join(full_text)
-
-
-async def listen_for_stop(websocket):
-    global _stop_flag
-    while True:
-        text_data = await websocket.receive_text()
-        if is_stop_message(text_data):
-            _stop_flag = True
-            break
 
 
 async def generate_response(websocket: WebSocket, enable_audio_output: bool) -> None:
@@ -108,6 +69,42 @@ async def generate_response(websocket: WebSocket, enable_audio_output: bool) -> 
             model=get_openai_model(),
         ),
     )
+
+
+async def send_messages(
+    websocket: WebSocket, llm_response: Iterator, enable_audio_output: bool
+) -> str:
+    """Sends messages to the websocket and returns the full text of the response"""
+    global _stop_flag
+    full_text = []
+    for sentence in llm_response:
+        if _stop_flag:
+            _stop_flag = False
+            break
+        full_text.append(sentence.text)
+        sentence_txt = sentence.text
+        if not enable_audio_output:
+            await send_message(
+                websocket, InterviewerMessage(type=MessageType.TEXT, data=sentence_txt)
+            )
+        else:
+            await send_message(
+                websocket, InterviewerMessage(type=MessageType.TEXT, data=sentence_txt)
+            )
+            await send_speech(websocket=websocket, sentence=sentence_txt)
+    # Send stop message
+    await send_message(websocket, InterviewerMessage(type=MessageType.STOP, data=""))
+    return "".join(full_text)
+
+
+async def listen_for_stop(websocket):
+    global _stop_flag
+    while True:
+        text_data = await websocket.receive_text()
+        candidate_message = CandidateMessage.parse_raw(text_data)
+        if is_stop_message(candidate_message):
+            _stop_flag = True
+            break
 
 
 def generate_gpt_messages(session_id: str) -> List[dict]:

@@ -5,11 +5,11 @@ from fastapi import WebSocket
 
 from backend.conf import get_openai_model
 from backend.db.dao import interviews_dao
-from backend.db.schemas.interviews import (
-    ConversationEntryEmbedded,
-    ConversationEntryRole,
-)
-from backend.routers.conversation.models import is_stop_message
+from backend.db.schemas.interviews import (ConversationEntryEmbedded,
+                                           ConversationEntryRole)
+from backend.routers.conversation.models import (CandidateMessage,
+                                                 RecievedStopMessageException,
+                                                 is_stop_message)
 
 LOGGER = logging.getLogger(__name__)
 CURRENT_CONVERSATION = interviews_dao.get_last_generated_interview_session().id
@@ -22,21 +22,24 @@ async def handle_audio_stream(websocket: WebSocket, user_id: str) -> str:
     """
     ret = []
     while True:
-        audio_data = await websocket.receive_bytes()
-        if is_stop_message(audio_data):  # Define how to recognize a stop message
+        try:
+            text_chunk = await handle_audio_input(websocket, user_id)
+            ret.append(text_chunk)
+        except RecievedStopMessageException:
             break
-        text_chunk = await handle_audio_input(user_id, audio_data)
-        ret.append(text_chunk)
+    # TODO finish implementation by saving text
     return "".join(ret)
 
 
-async def handle_audio_input(user_id: str, audio_data: bytes) -> str:
+async def handle_audio_input(websocket: WebSocket, user_id: str) -> str:
     """
     Handles incoming audio data.
     """
-    return str(audio_data)[
+    audio_data = await websocket.receive_bytes()
+    candidate_message = convert_to_candidate_message(audio_data)
+    return str(candidate_message.data)[
         :10
-    ]  # TODO Dummy implementation, replace with actual implementation
+    ]  # TODO Dummy implementation, replace with actual implementation that can convert audio to text
 
 
 async def handle_text_stream(websocket: WebSocket, user_id: str) -> str:
@@ -47,11 +50,12 @@ async def handle_text_stream(websocket: WebSocket, user_id: str) -> str:
     ret = []
     start_timestamp = datetime.now()
     while True:
-        text_data = await websocket.receive_text()
-        if is_stop_message(text_data):
+        try:
+            text_chunk = await handle_text_input(websocket, user_id)
+            ret.append(text_chunk)
+        except RecievedStopMessageException:
             break
-        text_chunk = await handle_text_input(user_id, text_data)
-        ret.append(text_chunk)
+
     user_response = "".join(ret)
     end_timestamp = datetime.now()
 
@@ -70,9 +74,24 @@ async def handle_text_stream(websocket: WebSocket, user_id: str) -> str:
     return user_response
 
 
-async def handle_text_input(user_id: str, text_data: str) -> str:
+async def handle_text_input(websocket: WebSocket, user_id: str) -> str:
     """
     Handles incoming text data.
     """
-    LOGGER.info(f"Received text data: {text_data}")
-    return text_data
+    text_data = await websocket.receive_text()
+    candidate_message = CandidateMessage.parse_raw(text_data)
+    if is_stop_message(candidate_message):
+        raise RecievedStopMessageException()
+
+    LOGGER.info(f"Received text data: {candidate_message.data}")
+    return candidate_message.data
+
+
+def convert_to_candidate_message(data: str) -> CandidateMessage:
+    """
+    Converts the given data to a CandidateMessage.
+    Rasies an exception if the data is a stop message.
+    """
+    candidate_message = CandidateMessage.parse_raw(data)
+    if is_stop_message(candidate_message):  # Define how to recognize a stop message
+        raise RecievedStopMessageException()
