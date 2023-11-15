@@ -117,3 +117,6 @@ def get_google_service_account_private_key():
 
 def get_google_service_account_private_key_id():
     return os.getenv("GOOGLE_SA_PRIVATE_KEY_ID")
+
+def get_jinja_templates_path():
+    return os.path.join(get_root_package_path(), "html_templates")  

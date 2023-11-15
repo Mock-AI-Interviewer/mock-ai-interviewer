@@ -12,7 +12,7 @@
     <script>
         var socket = null;
         function startWebSocket() {
-            socket = new WebSocket(`ws://${location.host}/<---WEBSOCKET_ENDPOINT--->/`);
+            socket = new WebSocket(`ws://${location.host}{{ websocket_endpoint }}`);
             socket.binaryType = 'arraybuffer'; // set binary type to arraybuffer
             socket.onmessage = function (event) {
                 console.log("Received data", event.data);
