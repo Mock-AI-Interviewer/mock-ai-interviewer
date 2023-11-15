@@ -1,9 +1,6 @@
 from fastapi.templating import Jinja2Templates
 
-from backend.conf import get_jinja_templates_path, initialise_app
-
-initialise_app()
-
+from backend.conf import get_jinja_templates_path
 
 def get_jinja_templates(template_name: str, data: dict):
     if "request" not in data:
