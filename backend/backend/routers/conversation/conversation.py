@@ -40,11 +40,13 @@ async def websocket_endpoint(
     
     try:
         while True:
+            LOGGER.info("==== Handling generated response ====")
             await generate_response(
                 websocket=websocket,
                 enable_audio_output=enable_audio_output
             )
             
+            LOGGER.info("==== Handling user input ====")
             if enable_audio_input:
                 await handle_audio_stream(websocket, user_id)
             else:

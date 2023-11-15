@@ -21,8 +21,10 @@ from backend.routers.conversation.models import (CandidateMessage,
                                                  send_message)
 
 LOGGER = logging.getLogger(__name__)
-
 CURRENT_CONVERSATION = interviews_dao.get_last_generated_interview_session().id
+ASYNCIO_WAIT_TIME = 1
+
+_stop_flag = False
 
 
 @dataclass
@@ -30,9 +32,6 @@ class InterviewState:
     web_socket: WebSocket
     stop_flag: bool = False
     enable_audio_output: bool = False
-
-
-_stop_flag = False
 
 
 async def generate_response(websocket: WebSocket, enable_audio_output: bool) -> None:
@@ -52,7 +51,7 @@ async def generate_response(websocket: WebSocket, enable_audio_output: bool) -> 
     send_task = asyncio.create_task(
         send_messages(websocket, llm_response, enable_audio_output)
     )
-    listen_task = asyncio.create_task(listen_for_stop(websocket))
+    listen_task = asyncio.create_task(listen_for_stop(websocket, send_task))
     full_text, _ = await asyncio.gather(send_task, listen_task)
 
     end_time = datetime.now()
@@ -92,19 +91,31 @@ async def send_messages(
                 websocket, InterviewerMessage(type=MessageType.TEXT, data=sentence_txt)
             )
             await send_speech(websocket=websocket, sentence=sentence_txt)
-    # Send stop message
+        LOGGER.info(f"Sent sentence: {sentence_txt}")
     await send_message(websocket, InterviewerMessage(type=MessageType.STOP, data=""))
+    LOGGER.info("Sent stop message")
     return "".join(full_text)
 
 
-async def listen_for_stop(websocket):
+async def listen_for_stop(websocket: WebSocket, send_task):
     global _stop_flag
-    while True:
-        text_data = await websocket.receive_text()
-        candidate_message = CandidateMessage.parse_raw(text_data)
-        if is_stop_message(candidate_message):
-            _stop_flag = True
+    while not _stop_flag:
+        if send_task.done():
+            LOGGER.info("Send messages task completed, exiting listen_for_stop")
             break
+        try:
+            # using asyncio.wait_for avoids the listen_for_stop coroutine from blocking indefinitely on receive_text()
+            text_data = await asyncio.wait_for(
+                websocket.receive_text(), timeout=ASYNCIO_WAIT_TIME
+            )
+            candidate_message = CandidateMessage.parse_raw(text_data)
+            if is_stop_message(candidate_message):
+                _stop_flag = True
+                LOGGER.info("Stop message received.")
+                break
+        except asyncio.TimeoutError:
+            # TimeoutError is expected, so we can ignore it
+            pass
 
 
 def generate_gpt_messages(session_id: str) -> List[dict]:
