@@ -1,13 +1,18 @@
-import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import AudioRecorderPage from "pages/AudioRecorderPage";
+import ConversationPage from "pages/ConversationPage";
+import InterviewPage from "pages/InterviewPage";
+import PATHS from "paths";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import HomePage from "./pages/HomePage";
-import AudioRecorderPage from "./pages/AudioRecorderPage";
+
 function App() {
     return (
         <Router>
             <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/audio-recorder"  element={<AudioRecorderPage />} />
+                <Route path={PATHS.HOME} element={<HomePage />} />
+                <Route path={PATHS.AUDIO_RECORDER} element={<AudioRecorderPage />} />
+                <Route path={PATHS.INTERVIEW} element={<InterviewPage />} />
+                <Route path={PATHS.CONVERSATION} element={<ConversationPage />} />
             </Routes>
         </Router>
     );
