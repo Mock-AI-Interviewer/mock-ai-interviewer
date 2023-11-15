@@ -3,13 +3,11 @@ import logging
 from fastapi import APIRouter, Query, Request, WebSocket, WebSocketDisconnect
 
 from backend.common import get_jinja_templates
-from backend.constants import STOP_MESSAGE_PATTERN
 from backend.conf import get_root_package_path
+from backend.constants import STOP_MESSAGE_PATTERN
 from backend.routers.conversation.output_handlers import generate_response
-from backend.routers.conversation.stream_handlers import (
-    handle_audio_stream,
-    handle_text_stream,
-)
+from backend.routers.conversation.stream_handlers import (handle_audio_stream,
+                                                          handle_text_stream)
 
 LOGGER = logging.getLogger(__name__)
 ROUTER_PREFIX = "/conversation"
@@ -32,27 +30,22 @@ async def websocket_endpoint(
 ):
     """
     Handles a WebSocket connection for audio and text data, processing the data accordingly.
-    - If enable_audio_input is True, incoming audio data is processed, followed by generating a response.
-    - If enable_audio_input is False, incoming text data is processed, followed by generating a response.
-    - The generated response depends on the enable_audio_output flag.
     """
     await websocket.accept()
-    
+
     try:
         while True:
             LOGGER.info("==== Handling generated response ====")
             await generate_response(
-                websocket=websocket,
-                enable_audio_output=enable_audio_output
+                websocket=websocket, enable_audio_output=enable_audio_output
             )
-            
+
             LOGGER.info("==== Handling user input ====")
             if enable_audio_input:
                 await handle_audio_stream(websocket, user_id)
             else:
                 await handle_text_stream(websocket, user_id)
 
-            
     except WebSocketDisconnect:
         LOGGER.info(f"User {user_id} disconnected.")
 

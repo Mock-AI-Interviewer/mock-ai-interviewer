@@ -2,7 +2,6 @@ import asyncio
 import io
 import logging
 import os
-from dataclasses import dataclass
 from datetime import datetime
 from typing import Iterator, List
 
@@ -21,24 +20,17 @@ from backend.routers.conversation.models import (CandidateMessage,
                                                  send_message)
 
 LOGGER = logging.getLogger(__name__)
-CURRENT_CONVERSATION = interviews_dao.get_last_generated_interview_session().id
+CURRENT_CONVERSATION_ID = interviews_dao.get_last_generated_interview_session().id
 ASYNCIO_WAIT_TIME = 1
 
 _stop_flag = False
-
-
-@dataclass
-class InterviewState:
-    web_socket: WebSocket
-    stop_flag: bool = False
-    enable_audio_output: bool = False
 
 
 async def generate_response(websocket: WebSocket, enable_audio_output: bool) -> None:
     start_time = datetime.now()
 
     # Getting history of messages
-    curr_message_hist = generate_gpt_messages(session_id=CURRENT_CONVERSATION)
+    curr_message_hist = generate_gpt_messages(session_id=CURRENT_CONVERSATION_ID)
 
     # Retrieve LLM response. Note this doesn't actually get the resopnse
     # It is a generator that yields the response sentance by sentance
@@ -58,7 +50,7 @@ async def generate_response(websocket: WebSocket, enable_audio_output: bool) -> 
 
     # Save reponse to db
     interviews_dao.add_message_to_interview_session(
-        session_id=CURRENT_CONVERSATION,
+        session_id=CURRENT_CONVERSATION_ID,
         conversation_entry=ConversationEntryEmbedded(
             role=ConversationEntryRole.INTERVIEWER.value,
             message=full_text,
@@ -98,6 +90,7 @@ async def send_messages(
 
 
 async def listen_for_stop(websocket: WebSocket, send_task):
+    """Listens for stop message and sets stop_flag if received"""
     global _stop_flag
     while not _stop_flag:
         if send_task.done():

@@ -14,6 +14,10 @@ LOGGER = logging.getLogger(__name__)
 ASYNCIO_PAUSE_TIME = 0.1
 
 
+class RecievedStopMessageException(Exception):
+    pass
+
+
 class MessageType(Enum):
     AUDIO = "audio"
     TEXT = "text"
@@ -33,10 +37,6 @@ class InterviewerMessage(Message):
     pass
 
 
-def encode_to_base64(binary_data):
-    return b64encode(binary_data).decode("utf-8")
-
-
 async def send_message(
     websocket: WebSocket,
     message: InterviewerMessage,
@@ -49,12 +49,12 @@ async def send_message(
     )  # TODO #37 This is a temporary solution to allow event loop a chance to send data
 
 
-class RecievedStopMessageException(Exception):
-    pass
-
-
 def is_stop_message(candidate_message: CandidateMessage) -> bool:
     """
     Checks if the given data is a stop message based on the type of the message.
     """
     return candidate_message.type == MessageType.STOP
+
+
+def encode_to_base64(binary_data):
+    return b64encode(binary_data).decode("utf-8")

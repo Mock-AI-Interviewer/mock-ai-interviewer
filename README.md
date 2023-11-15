@@ -26,7 +26,7 @@ PASSWORD=ANY_PASSWORD
 
 - This is to allow the frontend to be password protected
 
-- Also create a .env file in the backend repository root with the following content:
+- Also create a .env file in the `./backend` with the following content:
 
 ```env
 OPENAI_API_KEY="<FILL-ME-IN>"

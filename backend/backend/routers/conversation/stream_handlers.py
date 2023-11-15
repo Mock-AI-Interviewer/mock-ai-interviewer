@@ -33,7 +33,7 @@ async def handle_audio_stream(websocket: WebSocket, user_id: str) -> str:
 
 async def handle_audio_input(websocket: WebSocket, user_id: str) -> str:
     """
-    Handles incoming audio data.
+    Handles incoming audio data and converts it to text.
     """
     audio_data = await websocket.receive_bytes()
     candidate_message = convert_to_candidate_message(audio_data)
@@ -65,7 +65,7 @@ async def handle_text_stream(websocket: WebSocket, user_id: str) -> str:
         conversation_entry=ConversationEntryEmbedded(
             role=ConversationEntryRole.CANDIDATE.value,
             message=user_response,
-            tokens=len(user_response.split(" ")),
+            tokens=len(user_response.split(" ")),   # TODO Implement token calculation properly
             start_timestamp=start_timestamp,
             end_timestamp=end_timestamp,
             model=get_openai_model(),
@@ -77,12 +77,10 @@ async def handle_text_stream(websocket: WebSocket, user_id: str) -> str:
 async def handle_text_input(websocket: WebSocket, user_id: str) -> str:
     """
     Handles incoming text data.
+    If the data is a stop message, raises an exception.
     """
     text_data = await websocket.receive_text()
-    candidate_message = CandidateMessage.parse_raw(text_data)
-    if is_stop_message(candidate_message):
-        raise RecievedStopMessageException()
-
+    candidate_message = convert_to_candidate_message(text_data)
     LOGGER.info(f"Received text data: {candidate_message.data}")
     return candidate_message.data
 
@@ -95,3 +93,4 @@ def convert_to_candidate_message(data: str) -> CandidateMessage:
     candidate_message = CandidateMessage.parse_raw(data)
     if is_stop_message(candidate_message):  # Define how to recognize a stop message
         raise RecievedStopMessageException()
+    return candidate_message
