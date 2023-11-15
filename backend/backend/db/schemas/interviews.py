@@ -7,6 +7,7 @@ from mongoengine import (
     IntField,
     EmbeddedDocument,
     EmbeddedDocumentField,
+    URLField
 )
 
 
@@ -18,9 +19,11 @@ class ConversationEntryRole(Enum):
 
 class InterviewTypeBase:
     name = StringField(required=True)
+    short_description = StringField(required=True)
     description = StringField(required=True)
     job_description = StringField(required=True)
     init_prompt = StringField(required=True)
+    image = URLField(required=True)
 
 
 class InterviewTypeEmbedded(EmbeddedDocument, InterviewTypeBase):

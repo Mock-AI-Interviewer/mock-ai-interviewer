@@ -2,9 +2,11 @@
     {
         "interview_type": {
             "name": "Product Sense",
-            "description": "Product Sense Interview",
+            "short_description": "Product Sense Interview",
+            "description": "In a Product Sense Interview, the focus is on the candidate's understanding and intuition about product design and development. Candidates will discuss their approach to product-related scenarios, demonstrating their user empathy, creativity, and ability to balance user needs with business objectives. Expect questions about product strategy, design decisions, and problem-solving in a product context.",
+            "image": "https://www.productplan.com/uploads/2018/08/product-development.png",
             "job_description": "",
-            "init_prompt": "You are to act as an Interviewer and interview me for a product sense interview. Your first message should dive straight into the interview and explain the problem. Please give me only the interviewer's messages and not the candidates"
+            "init_prompt": "You are conducting a Product Sense Interview for a product management role. Your objective is to understand the candidate's product intuition, user empathy, and strategic thinking. Present scenarios or problems related to product development and ask how they would approach these challenges. Discuss their responses, probing for insights into their decision-making process, creativity, and ability to balance user needs with business objectives."
         },
         "user_id": "1",
         "start_time": "2021-05-01 11:59:00",
