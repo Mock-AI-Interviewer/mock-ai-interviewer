@@ -12,7 +12,7 @@ FROM nginx:alpine
 # Create .htpasswd file
 ARG PASSWORD
 RUN apk add --no-cache apache2-utils && \
-    htpasswd -b -c /etc/nginx/.htpasswd mock-interviewer $PASSWORD
+    htpasswd -b -c /etc/nginx/.htpasswd $FRONTEND_USERNAME $FRONTEND_PASSWORD
 
 COPY --from=build /app/build /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
