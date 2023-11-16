@@ -66,6 +66,9 @@
     </style>
     <script>
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 2048; // You can adjust this value
+        analyser.connect(audioContext.destination);
         const audioQueue = [];
         let isPlaying = false;
         let bufferThreshold = 1; // Number of chunks to buffer before playing
@@ -76,6 +79,7 @@
         const enableAudioOutput = '{{ enable_audio_output }}' == "true";
         const STOP_MESSAGE = '{{ stop_message }}'
 
+        drawVisual();
 
         function createWebSocket() {
             if (webSocket != undefined) {
@@ -202,6 +206,7 @@
                 const decodedData = await audioContext.decodeAudioData(buffer);
                 const source = audioContext.createBufferSource();
                 source.buffer = decodedData;
+                source.connect(analyser);
                 source.connect(audioContext.destination);
 
                 // Schedule playback to ensure smooth transition between chunks
@@ -217,12 +222,72 @@
             }
         }
 
+        function drawVisual() {
+            // Draw Waveform
+            requestAnimationFrame(drawVisual);
+
+            const dataArray = new Uint8Array(analyser.fftSize);
+            analyser.getByteTimeDomainData(dataArray);
+
+            const canvas = document.getElementById('visualizer');
+            const context = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+
+            context.fillStyle = 'rgba(255, 255, 255, 0.5)'; // Background color
+            context.fillRect(0, 0, width, height);
+
+            context.lineWidth = 2;
+            context.strokeStyle = 'rgb(0, 0, 0)'; // Waveform color
+
+            context.beginPath();
+
+            const sliceWidth = width * 1.0 / dataArray.length;
+            let x = 0;
+
+            for (let i = 0; i < dataArray.length; i++) {
+
+                const v = dataArray[i] / 128.0; // Normalize byte value to [0, 1]
+                const y = v * height / 2;
+
+                if (i === 0) {
+                    context.moveTo(x, y);
+                } else {
+                    context.lineTo(x, y);
+                }
+
+                x += sliceWidth;
+            }
+
+            context.lineTo(canvas.width, canvas.height / 2);
+            context.stroke();
+        }
+
+        // function drawVisual() {
+        //     // Draw Pulsating Circle
+        //     requestAnimationFrame(drawVisual);
+
+        //     const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        //     analyser.getByteFrequencyData(dataArray);
+
+        //     // Simple example: draw a circle that changes size with the audio
+        //     const canvas = document.getElementById('visualizer');
+        //     const context = canvas.getContext('2d');
+
+        //     const radius = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
+        //     context.clearRect(0, 0, canvas.width, canvas.height);
+        //     context.beginPath();
+        //     context.arc(canvas.width / 2, canvas.height / 2, radius, 0, 2 * Math.PI);
+        //     context.fill();
+        // }
+
     </script>
 </head>
 
 <body>
     <div style="text-align: center; margin-top: 100px;">
         <h1>Mock AI Interviewer</h1>
+        <canvas id="visualizer" width="800px" height="200px"></canvas>
         <div>
             <h3>Transcript:</h3>
             <div id="interviewerTextbox"></div>
