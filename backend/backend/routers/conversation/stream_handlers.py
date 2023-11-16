@@ -35,9 +35,10 @@ async def handle_audio_input(websocket: WebSocket, user_id: str) -> str:
     """
     Handles incoming audio data and converts it to text.
     """
-    audio_data = await websocket.receive_bytes()
-    candidate_message = convert_to_candidate_message(audio_data)
-    return str(candidate_message.data)[
+    message = await websocket.receive_text()
+    candidate_message = convert_to_candidate_message(message)
+    audio_chunk = candidate_message.data
+    return str(audio_chunk)[
         :10
     ]  # TODO Dummy implementation, replace with actual implementation that can convert audio to text
 
