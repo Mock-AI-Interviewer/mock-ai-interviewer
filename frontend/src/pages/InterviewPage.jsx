@@ -1,4 +1,4 @@
-import { Button, Container, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
+import { Button, Container, FormControl, InputLabel, MenuItem, Select, TextareaAutosize } from "@mui/material";
 import InterviewTypeCard from 'components/InterviewTypeCard';
 import TopAppBar from "components/TopAppBar";
 import PATHS from "paths";
@@ -39,6 +39,8 @@ function InterviewPage() {
     const [interviewer, setInterviewer] = useState('');
     const [interviewTypes, setInterviewTypes] = useState([]);
     const [selectedInterviewType, setSelectedInterviewType] = useState(null);
+    const [showJobDescription, setShowJobDescription] = useState(false);
+    const [jobDescription, setJobDescription] = useState('');
 
     useEffect(() => {
         // Replace the actual fetch call with a mock response
@@ -54,34 +56,44 @@ function InterviewPage() {
     // }, []);
 
     const handleStartInterview = () => {
-        navigate(PATHS.CONVERSATION, { interviewType: selectedInterviewType });
+        navigate(PATHS.CONVERSATION, {
+            state: {
+                interviewType: selectedInterviewType,
+                jobDescription: jobDescription
+            }
+        });
     };
 
     const handleInterviewTypeClick = (interviewType) => {
+        console.log(interviewType)
         setSelectedInterviewType(interviewType);
+    };
+
+    const toggleJobDescription = () => {
+        setShowJobDescription(!showJobDescription);
     };
 
     return (
         <>
             <TopAppBar />
-            <Container component="main" maxWidth="lg" style={{ marginTop: '3%', textAlign: 'center'}}>
+            <Container component="main" maxWidth="lg" style={{ marginTop: '3%', textAlign: 'center' }}>
                 <h1>Configure Interview</h1>
-                <div style={{ margin: '20px'}}>
+                <div style={{ margin: '20px' }}>
                     <h2>Select Interview Type</h2>
                     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
                         {interviewTypes.map(interviewType => (
                             <InterviewTypeCard
-                            key={interviewType.name}
-                            interviewType={interviewType}
-                            selectedInterviewType={selectedInterviewType}
-                            handleInterviewTypeClick={handleInterviewTypeClick}
-                            selected={selectedInterviewType === interviewType}
-                            onClick={() => handleInterviewTypeClick(interviewType)}
-                          />
+                                key={interviewType.name}
+                                interviewType={interviewType}
+                                selectedInterviewType={selectedInterviewType}
+                                handleInterviewTypeClick={handleInterviewTypeClick}
+                                selected={selectedInterviewType === interviewType}
+                                onClick={() => handleInterviewTypeClick(interviewType)}
+                            />
                         ))}
                     </div>
                 </div>
-                <div style={{ margin: '20px'}}>
+                <div style={{ margin: '20px' }}>
                     <h2>Select Interviewer</h2>
                     <FormControl variant="outlined" style={{ minWidth: 200 }}>
                         <InputLabel id="interviewer-label">Interviewer</InputLabel>
@@ -92,12 +104,31 @@ function InterviewPage() {
                             onChange={(event) => setInterviewer(event.target.value)}
                             label="Interviewer"
                         >
-                            
-                            <MenuItem value="Default">Default</MenuItem>
+
+                            <MenuItem value="Male">Male</MenuItem>
+                            <MenuItem value="Female">Female</MenuItem>
                         </Select>
                     </FormControl>
                 </div>
-                <Button variant="contained" onClick={handleStartInterview} disabled={!selectedInterviewType}>Start Interview</Button>
+                <div style={{ margin: '20px' }}>
+                    <h2>Extras</h2>
+                    <Button variant="outlined" onClick={toggleJobDescription}>
+                        {showJobDescription ? 'Hide Job Description' : 'Add Job Description'}
+                    </Button>
+                    {showJobDescription && (
+                        <TextareaAutosize
+                            minRows={5}
+                            style={{ width: '100%', marginTop: '10px' }}
+                            placeholder="Paste the job description here"
+                            value={jobDescription}
+                            onChange={(e) => setJobDescription(e.target.value)}
+                        />
+                    )}
+                </div>
+                <div style={{ borderTop: '2px solid #eee', margin: '20px 0' }}></div>
+                <Button variant="contained" color="success" size="large" onClick={handleStartInterview} disabled={!selectedInterviewType}>
+                    Start Interview
+                </Button>
             </Container>
         </>
     );
