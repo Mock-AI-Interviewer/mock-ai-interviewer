@@ -1,11 +1,10 @@
-import { Button, Container, FormControl, InputLabel, MenuItem, Select, TextareaAutosize } from "@mui/material";
+import { Button, Container, Divider, FormControl, InputLabel, MenuItem, Select, TextareaAutosize } from "@mui/material";
 import InterviewTypeCard from 'components/InterviewTypeCard';
 import TopAppBar from "components/TopAppBar";
 import PATHS from "paths";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const EXAMPLE_ENDPOINT = "https://example.com/interviews";
 const mockInterviewTypes = [
     {
         name: "Competancy",
@@ -125,8 +124,8 @@ function InterviewPage() {
                         />
                     )}
                 </div>
-                <div style={{ borderTop: '2px solid #eee', margin: '20px 0' }}></div>
-                <Button variant="contained" color="success" size="large" onClick={handleStartInterview} disabled={!selectedInterviewType}>
+                <Divider style={{ margin: '20px' }} />
+                <Button variant="contained" color="success" size="large" sx={{ mb: 10 }} onClick={handleStartInterview} disabled={!selectedInterviewType}>
                     Start Interview
                 </Button>
             </Container>
