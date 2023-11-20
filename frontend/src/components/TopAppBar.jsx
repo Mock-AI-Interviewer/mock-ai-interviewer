@@ -1,5 +1,5 @@
-import { AppBar, Toolbar, Typography, IconButton, ButtonBase } from '@mui/material';
 import PsychologyIcon from '@mui/icons-material/Psychology';
+import { AppBar, ButtonBase, Toolbar, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate hook for navigation
 
 function TopAppBar() {
@@ -12,10 +12,8 @@ function TopAppBar() {
     return (
         <AppBar position="static" color="transparent" style={{ marginBottom: '20px' }}>
             <Toolbar>
-                <ButtonBase onClick={handleHomeClick} style={{display: 'flex', alignItems: 'center'}}>
-                    <IconButton edge="start" color="inherit" aria-label="ai-icon">
-                        <PsychologyIcon fontSize="large" /> {/* Custom AI icon */}
-                    </IconButton>
+                <ButtonBase onClick={handleHomeClick} style={{ display: 'flex', alignItems: 'center' }}>
+                    <PsychologyIcon fontSize="large" /> {/* Custom AI icon */}
                     <Typography variant="h5" style={{ fontWeight: 300, marginLeft: '10px' }}>
                         Mock AI Interviewer
                     </Typography>
