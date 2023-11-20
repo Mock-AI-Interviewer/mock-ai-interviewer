@@ -29,7 +29,7 @@ def setup_logging():
     """Setup logging configuration"""
     logging.basicConfig(
         level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        format="%(asctime)s - %(name)s:Line:%(lineno)d - %(levelname)s - %(message)s",
         datefmt="%d-%b-%y %H:%M:%S",
     )
 
