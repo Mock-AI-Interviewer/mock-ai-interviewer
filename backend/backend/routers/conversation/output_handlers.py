@@ -10,14 +10,19 @@ from fastapi import WebSocket
 import backend.openai.client as LLMClient
 from backend.conf import get_openai_model
 from backend.db.dao import interviews_dao
-from backend.db.schemas.interviews import (ConversationEntryEmbedded,
-                                           ConversationEntryRole)
+from backend.db.schemas.interviews import (
+    ConversationEntryEmbedded,
+    ConversationEntryRole,
+)
 from backend.eleven_labs.client import speak_sentence as send_speech
 from backend.openai.models import GPTMessages
-from backend.routers.conversation.models import (CandidateMessage,
-                                                 InterviewerMessage,
-                                                 MessageType, is_stop_message,
-                                                 send_message)
+from backend.routers.conversation.models import (
+    CandidateMessage,
+    InterviewerMessage,
+    MessageType,
+    is_stop_message,
+    send_message,
+)
 
 LOGGER = logging.getLogger(__name__)
 CURRENT_CONVERSATION_ID = interviews_dao.get_last_generated_interview_session().id
@@ -72,8 +77,10 @@ async def send_messages(
         if _stop_flag:
             _stop_flag = False
             break
-        full_text.append(sentence.text)
+
         sentence_txt = sentence.text
+        full_text.append(sentence_txt)
+
         if not enable_audio_output:
             await send_message(
                 websocket, InterviewerMessage(type=MessageType.TEXT, data=sentence_txt)
@@ -84,8 +91,9 @@ async def send_messages(
             )
             await send_speech(websocket=websocket, sentence=sentence_txt)
         LOGGER.info(f"Sent sentence: {sentence_txt}")
+
     await send_message(websocket, InterviewerMessage(type=MessageType.STOP, data=""))
-    LOGGER.info("Sent stop message")
+    LOGGER.info("Sent Client Stop Message ------------------")
     return "".join(full_text)
 
 
