@@ -41,10 +41,11 @@ async def websocket_endpoint(
             )
 
             LOGGER.info("==== Handling user input ====")
-            if enable_audio_input:
-                await handle_audio_stream(websocket, user_id)
-            else:
-                await handle_text_stream(websocket, user_id)
+            await handle_audio_stream(websocket, user_id)
+            # if enable_audio_input:
+            #     await handle_audio_stream(websocket, user_id)
+            # else:
+            #     await handle_text_stream(websocket, user_id)
 
     except WebSocketDisconnect:
         LOGGER.info(f"User {user_id} disconnected.")

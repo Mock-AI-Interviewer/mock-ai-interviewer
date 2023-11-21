@@ -1,9 +1,12 @@
 import logging
 from datetime import datetime
+import queue
+from google.cloud import speech
+from multiprocessing.pool import ThreadPool
 
 from fastapi import WebSocket
 
-from backend.conf import get_openai_model
+from backend.conf import get_openai_model, get_google_credentials
 from backend.db.dao import interviews_dao
 from backend.db.schemas.interviews import (ConversationEntryEmbedded,
                                            ConversationEntryRole)
@@ -13,35 +16,103 @@ from backend.routers.conversation.models import (CandidateMessage,
 
 LOGGER = logging.getLogger(__name__)
 CURRENT_CONVERSATION = interviews_dao.get_last_generated_interview_session().id
-
+SPEECH_CLIENT = speech.SpeechClient(credentials=get_google_credentials())
+audio_queue = queue.Queue()
+pool = ThreadPool(processes=1)
 
 async def handle_audio_stream(websocket: WebSocket, user_id: str) -> str:
     """
     Handles incoming audio stream until a stop message is received.
     Returns the full text data based of the transcribed audio.
     """
-    ret = []
-    while True:
-        try:
-            text_chunk = await handle_audio_input(websocket, user_id)
-            ret.append(text_chunk)
-        except RecievedStopMessageException:
-            break
-    # TODO finish implementation by saving text
-    return "".join(ret)
+    try:
+        text_chunk = await handle_audio_input(websocket, user_id)
+    except RecievedStopMessageException:
+        raise RecievedStopMessageException
+    return text_chunk
 
 
 async def handle_audio_input(websocket: WebSocket, user_id: str) -> str:
     """
     Handles incoming audio data and converts it to text.
     """
-    message = await websocket.receive_text()
-    candidate_message = convert_to_candidate_message(message)
-    audio_chunk = candidate_message.data
-    return str(audio_chunk)[
-        :10
-    ]  # TODO Dummy implementation, replace with actual implementation that can convert audio to text
+    transcribe_task = None
+    start_timestamp = datetime.now()
+    while True:
+        message = await websocket.receive()
+        if "bytes" in message:
+            audio_data = message["bytes"]
+            LOGGER.info("Sending audio chunk to queue")
+            audio_queue.put(audio_data)
+            if transcribe_task is None:
+                transcribe_task = pool.apply_async(transcribe_audio_data)
 
+        elif "text" in message:
+            text_data = message["text"]
+            if text_data == "recording_stopped":
+                audio_queue.put(None)
+                user_response = transcribe_task.get()
+                LOGGER.info(f"Final Transcript: {user_response}")
+                break
+                
+        elif message["type"] == "websocket.disconnect":
+                LOGGER.info("WebSocket disconnected")
+                break
+
+    # candidate_message = convert_to_candidate_message(text_data)
+    LOGGER.info(f"Input: {user_response}")
+    end_timestamp = datetime.now()
+
+    interviews_dao.add_message_to_interview_session(
+        session_id=CURRENT_CONVERSATION,
+        conversation_entry=ConversationEntryEmbedded(
+            role=ConversationEntryRole.CANDIDATE.value,
+            message=user_response,
+            tokens=len(user_response.split(" ")),   # TODO Implement token calculation properly
+            start_timestamp=start_timestamp,
+            end_timestamp=end_timestamp,
+            model=get_openai_model(),
+        ),
+    )
+    return text_data
+
+def transcribe_audio_data() -> str:
+    ret = []
+    config = speech.RecognitionConfig(
+        encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+        sample_rate_hertz=44100,  # Adjust the sample rate to match your audio sample rate
+        language_code="en-US",  # Change the language code to the language of the audio
+        model='video'
+    )
+    streaming_config = speech.StreamingRecognitionConfig(
+        config=config, interim_results=True
+    )
+    responses = SPEECH_CLIENT.streaming_recognize(streaming_config, audio_stream_generator())
+    for response in responses:
+        if not response.results:
+            continue
+
+        result = response.results[0] # Extract the transcript from the first result
+        if result.is_final:
+            transcript = result.alternatives[0].transcript
+            ret.append(transcript)
+            LOGGER.info(f"Transcript: {transcript}")
+    LOGGER.info(f"Final Transcript: {' '.join(ret)}")
+    return " ".join(ret)
+    
+def audio_stream_generator():
+    while True:
+        LOGGER.info("Stream generator")
+        try:
+            audio_data = audio_queue.get(timeout=1)
+        except queue.Empty:
+            continue
+        if audio_data is None:
+            LOGGER.info("Received sentinel value, ending stream.")
+            break
+        
+        yield speech.StreamingRecognizeRequest(audio_content=audio_data)
+    LOGGER.info("Recording stopped, ending audio stream.")
 
 async def handle_text_stream(websocket: WebSocket, user_id: str) -> str:
     """
