@@ -12,6 +12,10 @@ function ConversationPage({ user_id = 1, enableAudioInput = false, enableAudioOu
     const [userInput, setUserInput] = useState('');
     const [turnAlert, setTurnAlert] = useState("Interviewer's Turn");
     const [messages, setMessages] = useState([]);
+    const [recording, setRecording] = useState(false);
+    const recorderRef = useRef(null);
+    const [isRecorderLoaded, setIsRecorderLoaded] = useState(false);
+    const sendIntervalRef = useRef(null);
     const webSocketRef = useRef(null); // Ref to store the WebSocket instance
     const WEB_SOCKET_ENDPOINT = `${config.backendApiWebsocketUrl}/interview/${interview_id}/response`
     const WEB_SOCKET_FULL_URL = `${WEB_SOCKET_ENDPOINT}?user_id=${user_id}&enable_audio_input=${enableAudioInput}&enable_audio_output=${enableAudioOutput}`;
@@ -50,7 +54,12 @@ function ConversationPage({ user_id = 1, enableAudioInput = false, enableAudioOu
         console.log(messages);
     }, [messages]);
 
-
+    useEffect(() => {
+        const script = document.createElement('script');
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/recorderjs/0.1.0/recorder.js";
+        script.onload = () => setIsRecorderLoaded(true);
+        document.body.appendChild(script);
+    }, []);
 
     if (!interviewType) {
         return null;
@@ -99,6 +108,15 @@ function ConversationPage({ user_id = 1, enableAudioInput = false, enableAudioOu
         }
     };
 
+    const sendAudioChunk = () => {
+        if (recorderRef.current && webSocketRef.current && webSocketRef.current.readyState === WebSocket.OPEN) {
+            recorderRef.current.exportWAV(blob => {
+                webSocketRef.current.send(blob);
+                recorderRef.current.clear(); // Clear the recorder's buffer after sending
+            }, 'audio/wav');
+        }
+    };
+
     async function playAudioQueue() {
         // Start playing if we've reached the buffer threshold or if we're already playing and more data is available
         if ((isBuffering && audioQueue.length >= bufferThreshold) || (!isBuffering && audioQueue.length > 0)) {
@@ -143,6 +161,45 @@ function ConversationPage({ user_id = 1, enableAudioInput = false, enableAudioOu
             return new Promise(resolve => source.onended = resolve);
         } catch (e) {
             console.error('Error decoding audio data:', e);
+        }
+    }
+
+    function initializeRecording() {
+        if (!isRecorderLoaded) {
+            console.error("Recorder.js is not loaded yet.");
+            return;
+        }
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const audioContext = new AudioContext();
+                const source = audioContext.createMediaStreamSource(stream);
+
+                recorderRef.current = new window.Recorder(source, { numChannels: 1 });
+                recorderRef.current.record();
+                setRecording(true);
+
+                // Set up an interval to send audio chunks
+                sendIntervalRef.current = setInterval(sendAudioChunk, 1000); // Adjust interval as needed
+            })
+            .catch(error => {
+                console.error('Error accessing microphone:', error);
+            });
+    }
+
+    function stopRecording() {
+        if (recorderRef.current) {
+            clearInterval(sendIntervalRef.current); // Clear the interval
+            recorderRef.current.stop();
+            sendAudioChunk(); // Send the last chunk of audio
+
+            // Delayed sending of the "recording_stopped" message
+            setTimeout(() => {
+                webSocketRef.current.send("recording_stopped");
+                console.log('Sent text');
+            }, 1000); // Wait for 1 second before sending the message
+
+            setRecording(false);
         }
     }
 
@@ -212,6 +269,14 @@ function ConversationPage({ user_id = 1, enableAudioInput = false, enableAudioOu
     const handleInterruptInterviewer = async () => {
         sendStopMessage();
         setTurnAlert("Your Turn");
+    };
+
+    const toggleRecording = () => {
+        if (!recording) {
+            initializeRecording();
+        } else {
+            stopRecording();
+        }
     };
 
     function drawVisual() {
@@ -297,14 +362,22 @@ function ConversationPage({ user_id = 1, enableAudioInput = false, enableAudioOu
                         overflow: 'auto',
                     }}
                 />
+                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1 }}>
+                <Button onClick={toggleRecording} variant="contained" color="success" id="recordButton">
+                    {recording ? 'Stop Recording' : 'Start Recording'}
+                </Button>
+                </Box>
                 <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center', gap: 1 }}>
                     <Button onClick={handleSendText} variant="contained" id="sendTextButton" >Send</Button>
                     <Button onClick={handleInterruptInterviewer} variant="contained" id="interruptInterviewerButton" sx={{ backgroundColor: 'orange', '&:hover': { backgroundColor: 'darkorange' } }}>Interrupt</Button>
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                <Box sx={{ mt: 1, display: 'flex', justifyContent: 'center', gap: 1 }}>
                     <Button onClick={handleStartInterview} variant="contained" color="success" id="startInterviewButton">Start Interview</Button>
                     <Button onClick={handleStopInterview} variant="contained" color="error" id="stopInterviewButton">Stop Interview</Button>
                 </Box>
+                {/* <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1 }}>
+                    <Button onClick={toggleRecording} variant="contained" color="success" id="recordButton">{recording ? 'Stop Recording' : 'Start Recording'}</Button>
+                </Box> */}
 
                 <TranscriptBox messages={messages} isOpen={true} />
             </Container>
