@@ -6,11 +6,13 @@ import PATHS from "paths";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from 'react-router-dom';
 
-function ConversationPage({ user_id = 1, enableAudioInput = false, enableAudioOutput = true, interview_id = "-1" }) {
+function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOutput = true, interview_id = "-1" }) {
     const { state } = useLocation();
-        const navigate = useNavigate();
+    const navigate = useNavigate();
     const [userInput, setUserInput] = useState('');
-    const [turnAlert, setTurnAlert] = useState("Interviewer's Turn");
+    const TURN_INTERVIEWER = "Interviewer's Turn";
+    const TURN_CANDIDATE = "Your Turn";
+    const [turnAlert, setTurnAlert] = useState(TURN_INTERVIEWER);
     const [messages, setMessages] = useState([]);
     const [recording, setRecording] = useState(false);
     const recorderRef = useRef(null);
@@ -209,7 +211,7 @@ function ConversationPage({ user_id = 1, enableAudioInput = false, enableAudioOu
     };
     const receiveStop = () => {
         console.log("Recieved stop message");
-        setTurnAlert("Your Turn")
+        setTurnAlert(TURN_CANDIDATE)
     };
 
     const sendText = () => {
@@ -219,7 +221,7 @@ function ConversationPage({ user_id = 1, enableAudioInput = false, enableAudioOu
         // Here you'll call your backend functions
         sendTextMessage(userInput);
         sendStopMessage();
-        setTurnAlert("Interviewer's Turn");
+        setTurnAlert(TURN_INTERVIEWER);
 
         // Clear the user input field
         setUserInput('');
@@ -268,7 +270,7 @@ function ConversationPage({ user_id = 1, enableAudioInput = false, enableAudioOu
 
     const handleInterruptInterviewer = async () => {
         sendStopMessage();
-        setTurnAlert("Your Turn");
+        setTurnAlert(TURN_CANDIDATE);
     };
 
     const toggleRecording = () => {
@@ -363,9 +365,9 @@ function ConversationPage({ user_id = 1, enableAudioInput = false, enableAudioOu
                     }}
                 />
                 <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1 }}>
-                <Button onClick={toggleRecording} variant="contained" color="success" id="recordButton">
-                    {recording ? 'Stop Recording' : 'Start Recording'}
-                </Button>
+                    <Button onClick={toggleRecording} variant="contained" color="success" id="recordButton">
+                        {recording ? 'Stop Recording' : 'Start Recording'}
+                    </Button>
                 </Box>
                 <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center', gap: 1 }}>
                     <Button onClick={handleSendText} variant="contained" id="sendTextButton" >Send</Button>
