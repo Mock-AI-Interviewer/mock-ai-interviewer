@@ -49,9 +49,9 @@ class InterviewSessionDocument(Document):
     interview_type = EmbeddedDocumentField(InterviewTypeEmbedded)
     user_id = StringField(required=True)
     start_time = DateTimeField(required=True)
-    end_time = DateTimeField(required=True)
-    total_input_tokens = IntField(required=True)
-    total_output_tokens = IntField(required=True)
+    end_time = DateTimeField(required=False)
+    total_input_tokens = IntField(required=False)
+    total_output_tokens = IntField(required=False)
     conversation_history = ListField(EmbeddedDocumentField(ConversationEntryEmbedded))
 
     meta = {

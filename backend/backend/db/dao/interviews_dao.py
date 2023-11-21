@@ -12,6 +12,11 @@ def get_all_interview_types() -> List[InterviewTypeDocument]:
     return list(InterviewTypeDocument.objects.all())
 
 
+def create_new_interview_session(
+    interview_type: InterviewTypeDocument, user_id: str
+) -> InterviewSessionDocument:
+    raise NotImplementedError()
+
 def add_message_to_interview_session(
     session_id: str, conversation_entry: ConversationEntryEmbedded
 ) -> None:

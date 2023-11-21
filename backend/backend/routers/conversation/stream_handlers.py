@@ -12,10 +12,11 @@ from backend.routers.conversation.models import (CandidateMessage,
                                                  is_stop_message)
 
 LOGGER = logging.getLogger(__name__)
-CURRENT_CONVERSATION = interviews_dao.get_last_generated_interview_session().id
 
 
-async def handle_audio_stream(websocket: WebSocket, user_id: str) -> str:
+async def handle_audio_stream(
+    websocket: WebSocket, user_id: str, interview_id: str
+) -> str:
     """
     Handles incoming audio stream until a stop message is received.
     Returns the full text data based of the transcribed audio.
@@ -43,7 +44,9 @@ async def handle_audio_input(websocket: WebSocket, user_id: str) -> str:
     ]  # TODO Dummy implementation, replace with actual implementation that can convert audio to text
 
 
-async def handle_text_stream(websocket: WebSocket, user_id: str) -> str:
+async def handle_text_stream(
+    websocket: WebSocket, user_id: str, interview_id: str
+) -> str:
     """
     Handles incoming text stream until a stop message is received.
     Returns the full text data.
@@ -62,11 +65,13 @@ async def handle_text_stream(websocket: WebSocket, user_id: str) -> str:
 
     # Save reponse to db
     interviews_dao.add_message_to_interview_session(
-        session_id=CURRENT_CONVERSATION,
+        session_id=interview_id,
         conversation_entry=ConversationEntryEmbedded(
             role=ConversationEntryRole.CANDIDATE.value,
             message=user_response,
-            tokens=len(user_response.split(" ")),   # TODO Implement token calculation properly
+            tokens=len(
+                user_response.split(" ")
+            ),  # TODO Implement token calculation properly
             start_timestamp=start_timestamp,
             end_timestamp=end_timestamp,
             model=get_openai_model(),

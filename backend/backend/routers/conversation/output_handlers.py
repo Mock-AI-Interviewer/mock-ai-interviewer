@@ -10,32 +10,28 @@ from fastapi import WebSocket
 import backend.openai.client as LLMClient
 from backend.conf import get_openai_model
 from backend.db.dao import interviews_dao
-from backend.db.schemas.interviews import (
-    ConversationEntryEmbedded,
-    ConversationEntryRole,
-)
+from backend.db.schemas.interviews import (ConversationEntryEmbedded,
+                                           ConversationEntryRole)
 from backend.eleven_labs.client import speak_sentence as send_speech
 from backend.openai.models import GPTMessages
-from backend.routers.conversation.models import (
-    CandidateMessage,
-    InterviewerMessage,
-    MessageType,
-    is_stop_message,
-    send_message,
-)
+from backend.routers.conversation.models import (CandidateMessage,
+                                                 InterviewerMessage,
+                                                 MessageType, is_stop_message,
+                                                 send_message)
 
 LOGGER = logging.getLogger(__name__)
-CURRENT_CONVERSATION_ID = interviews_dao.get_last_generated_interview_session().id
+
 ASYNCIO_WAIT_TIME = 1
 
 _stop_flag = False
 
 
-async def generate_response(websocket: WebSocket, enable_audio_output: bool) -> None:
+async def generate_response(websocket: WebSocket, enable_audio_output: bool,
+interview_id: str) -> None:
     start_time = datetime.now()
 
     # Getting history of messages
-    curr_message_hist = generate_gpt_messages(session_id=CURRENT_CONVERSATION_ID)
+    curr_message_hist = generate_gpt_messages(session_id=interview_id)
 
     # Retrieve LLM response. Note this doesn't actually get the resopnse
     # It is a generator that yields the response sentance by sentance
@@ -55,7 +51,7 @@ async def generate_response(websocket: WebSocket, enable_audio_output: bool) -> 
 
     # Save reponse to db
     interviews_dao.add_message_to_interview_session(
-        session_id=CURRENT_CONVERSATION_ID,
+        session_id=interview_id,
         conversation_entry=ConversationEntryEmbedded(
             role=ConversationEntryRole.INTERVIEWER.value,
             message=full_text,

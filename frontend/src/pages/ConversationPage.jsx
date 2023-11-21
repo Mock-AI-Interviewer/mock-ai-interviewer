@@ -6,14 +6,14 @@ import PATHS from "paths";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from 'react-router-dom';
 
-function ConversationPage({ user_id = 1, enableAudioInput = false, enableAudioOutput = true }) {
+function ConversationPage({ user_id = 1, enableAudioInput = false, enableAudioOutput = true, interview_id = "-1" }) {
     const { state } = useLocation();
-    const navigate = useNavigate();
+        const navigate = useNavigate();
     const [userInput, setUserInput] = useState('');
     const [turnAlert, setTurnAlert] = useState("Interviewer's Turn");
     const [messages, setMessages] = useState([]);
     const webSocketRef = useRef(null); // Ref to store the WebSocket instance
-    const WEB_SOCKET_ENDPOINT = `${config.backendApiWebsocketUrl}/conversation/response`
+    const WEB_SOCKET_ENDPOINT = `${config.backendApiWebsocketUrl}/interview/${interview_id}/response`
     const WEB_SOCKET_FULL_URL = `${WEB_SOCKET_ENDPOINT}?user_id=${user_id}&enable_audio_input=${enableAudioInput}&enable_audio_output=${enableAudioOutput}`;
     const AUDIO_MESSAGE = "audio"
     const TEXT_MESSAGE = "text"
@@ -254,24 +254,6 @@ function ConversationPage({ user_id = 1, enableAudioInput = false, enableAudioOu
         context.lineTo(canvas.width, canvas.height / 2);
         context.stroke();
     }
-
-    // function drawVisual() {
-    //     // Draw Pulsating Circle
-    //     requestAnimationFrame(drawVisual);
-
-    //     const dataArray = new Uint8Array(analyser.frequencyBinCount);
-    //     analyser.getByteFrequencyData(dataArray);
-
-    //     // Simple example: draw a circle that changes size with the audio
-    //     const canvas = document.getElementById('visualizer');
-    //     const context = canvas.getContext('2d');
-
-    //     const radius = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
-    //     context.clearRect(0, 0, canvas.width, canvas.height);
-    //     context.beginPath();
-    //     context.arc(canvas.width / 2, canvas.height / 2, radius, 0, 2 * Math.PI);
-    //     context.fill();
-    // }
 
 
     return (
