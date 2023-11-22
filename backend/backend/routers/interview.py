@@ -12,15 +12,6 @@ router = APIRouter(
 )
 
 
-class InterviewConfigBase(BaseModel):
-    type: str
-    job_description: str
-
-
-class InterviewConfigCreate(InterviewConfigBase):
-    pass
-
-
 class InterviewTypeBase(BaseModel):
     name: str
     short_description: str
@@ -34,8 +25,23 @@ class InterviewTypeRead(InterviewTypeBase):
     pass
 
 
+class InterviewSessionBase(BaseModel):
+    interview_type: InterviewTypeBase
+    user_id: str
+
+
+class InterviewSessionRead(InterviewSessionBase):
+    interview_id: str
+
+
+class InterviewSessionCreate(InterviewSessionBase):
+    pass
+
+
 @router.post("/configure")
-async def configure_interview(interview_config: InterviewConfigCreate):
+async def configure_interview(
+    interview_session: InterviewSessionCreate,
+) -> InterviewSessionRead:
     """Initialise an interview session with the given configuration"""
     raise NotImplementedError()
 
@@ -57,8 +63,8 @@ async def list_interview_types():
     return ret
 
 
-@router.get("/types/{name}", response_model=InterviewTypeRead)
-async def get_interview_type(name: str = Path(...)):
+@router.get("/types/{name}")
+async def get_interview_type(name: str = Path(...)) -> InterviewTypeRead:
     # TODO Change this method to use mongoengine query instead of looping through all interview types
     all_interview_types = interviews_dao.get_all_interview_types()
     for interview_type in all_interview_types:
