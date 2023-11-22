@@ -13,9 +13,9 @@ from backend.db.schemas.interviews import (ConversationEntryEmbedded,
 from backend.routers.conversation.models import (CandidateMessage,
                                                  RecievedStopMessageException,
                                                  is_stop_message)
+from backend.services.google.client import SPEECH_CLIENT
 
 LOGGER = logging.getLogger(__name__)
-SPEECH_CLIENT = speech.SpeechClient(credentials=get_google_credentials())
 audio_queue = queue.Queue()
 pool = ThreadPool(processes=1)
 
@@ -52,7 +52,6 @@ async def handle_audio_input(
             audio_queue.put(audio_data)
             if transcribe_task is None:
                 transcribe_task = pool.apply_async(transcribe_audio_data)
-
         elif "text" in message:
             text_data = message["text"]
             if text_data == "recording_stopped":
@@ -60,13 +59,10 @@ async def handle_audio_input(
                 user_response = transcribe_task.get()
                 LOGGER.info(f"Final Transcript: {user_response}")
                 break
-
         elif message["type"] == "websocket.disconnect":
             LOGGER.info("WebSocket disconnected")
             break
 
-    # candidate_message = convert_to_candidate_message(text_data)
-    LOGGER.info(f"Input: {user_response}")
     end_timestamp = datetime.now()
 
     interviews_dao.add_message_to_interview_session(
@@ -107,7 +103,7 @@ def transcribe_audio_data() -> str:
         if result.is_final:
             transcript = result.alternatives[0].transcript
             ret.append(transcript)
-            LOGGER.info(f"Transcript: {transcript}")
+            LOGGER.info(f"First Result Transcript: {transcript}")
     LOGGER.info(f"Final Transcript: {' '.join(ret)}")
     return " ".join(ret)
 

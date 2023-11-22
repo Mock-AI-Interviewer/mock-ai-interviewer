@@ -7,27 +7,27 @@ from typing import Iterator, List
 
 from fastapi import WebSocket
 
-import backend.openai.client as LLMClient
+import backend.services.openai.client as LLMClient
 from backend.conf import get_openai_model
 from backend.db.dao import interviews_dao
 from backend.db.schemas.interviews import (ConversationEntryEmbedded,
                                            ConversationEntryRole)
-from backend.eleven_labs.client import speak_sentence as send_speech
-from backend.openai.models import GPTMessages
 from backend.routers.conversation.models import (CandidateMessage,
                                                  InterviewerMessage,
                                                  MessageType, is_stop_message,
                                                  send_message)
+from backend.services.eleven_labs.client import speak_sentence as send_speech
+from backend.services.openai.models import GPTMessages
 
 LOGGER = logging.getLogger(__name__)
-
 ASYNCIO_WAIT_TIME = 1
 
 _stop_flag = False
 
 
-async def generate_response(websocket: WebSocket, enable_audio_output: bool,
-interview_id: str) -> None:
+async def generate_response(
+    websocket: WebSocket, enable_audio_output: bool, interview_id: str
+) -> None:
     start_time = datetime.now()
 
     # Getting history of messages
