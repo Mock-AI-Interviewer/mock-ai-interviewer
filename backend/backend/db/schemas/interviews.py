@@ -1,14 +1,8 @@
 from enum import Enum, auto
-from mongoengine import (
-    Document,
-    StringField,
-    DateTimeField,
-    ListField,
-    IntField,
-    EmbeddedDocument,
-    EmbeddedDocumentField,
-    URLField
-)
+
+from mongoengine import (DateTimeField, Document, EmbeddedDocument,
+                         EmbeddedDocumentField, IntField, ListField,
+                         StringField, URLField)
 
 
 class ConversationEntryRole(Enum):
@@ -48,11 +42,13 @@ class ConversationEntryEmbedded(EmbeddedDocument):
 class InterviewSessionDocument(Document):
     interview_type = EmbeddedDocumentField(InterviewTypeEmbedded)
     user_id = StringField(required=True)
-    start_time = DateTimeField(required=True)
+    start_time = DateTimeField(required=False)
     end_time = DateTimeField(required=False)
     total_input_tokens = IntField(required=False)
     total_output_tokens = IntField(required=False)
-    conversation_history = ListField(EmbeddedDocumentField(ConversationEntryEmbedded))
+    conversation_history = ListField(
+        EmbeddedDocumentField(ConversationEntryEmbedded), required=True
+    )
 
     meta = {
         "collection": "interview_sessions",
