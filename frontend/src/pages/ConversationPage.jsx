@@ -17,6 +17,7 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
     const [recording, setRecording] = useState(false);
     const recorderRef = useRef(null);
     const [isRecorderLoaded, setIsRecorderLoaded] = useState(false);
+    const [isInterviewStarted, setIsInterviewStarted] = useState(false);
     const sendIntervalRef = useRef(null);
     const webSocketRef = useRef(null); // Ref to store the WebSocket instance
     const WEB_SOCKET_ENDPOINT = `${config.backendApiWebsocketUrl}/interview/${interview_id}/response`
@@ -258,12 +259,14 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
     const handleStopInterview = () => {
         sendStopMessage();
         stopWebSocket();
+        setIsInterviewStarted(false);
     };
 
     const handleStartInterview = async () => {
         if (audioContext.state === 'suspended') {
             await audioContext.resume();
         }
+        setIsInterviewStarted(true);
         webSocketRef.current = createWebSocket();
         drawVisual();
     };
@@ -374,9 +377,25 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
                  </>
                 )}
                 <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1 }}>
-                    <Button onClick={toggleRecording} variant="contained" color="success" id="recordButton">
-                        {recording ? 'Stop Recording' : 'Start Recording'}
-                    </Button>
+                    {isInterviewStarted && (
+                        <Button
+                            onClick={toggleRecording}
+                            variant="contained"
+                            sx={{
+                                borderRadius: '50%',
+                                width: 100,
+                                height: 100,
+                                backgroundColor: recording ? 'red' : 'green',
+                                color: 'white',
+                                '&:hover': {
+                                    backgroundColor: recording ? 'darkred' : 'darkgreen',
+                                }
+                            }}
+                            id="recordButton"
+                        >
+                            {recording ? 'Stop' : 'Record'}
+                        </Button>
+                    )}
                 </Box>
                 <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center', gap: 1 }}>
                     <Button onClick={handleInterruptInterviewer} variant="contained" id="interruptInterviewerButton" sx={{ backgroundColor: 'orange', '&:hover': { backgroundColor: 'darkorange' } }}>Interrupt</Button>
