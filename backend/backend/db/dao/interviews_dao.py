@@ -1,8 +1,10 @@
 from typing import List, Optional
 
-from backend.db.schemas.interviews import (ConversationEntryEmbedded,
-                                           InterviewSessionDocument,
-                                           InterviewTypeDocument)
+from backend.db.schemas.interviews import (
+    ConversationEntryEmbedded,
+    InterviewSessionDocument,
+    InterviewTypeDocument,
+)
 
 
 def get_interview_session_by_id(session_id: str) -> Optional[InterviewSessionDocument]:
@@ -11,6 +13,15 @@ def get_interview_session_by_id(session_id: str) -> Optional[InterviewSessionDoc
 
 def get_all_interview_types() -> List[InterviewTypeDocument]:
     return list(InterviewTypeDocument.objects.all())
+
+
+def get_interview_type(name: str) -> Optional[InterviewTypeDocument]:
+    """
+    Get an interview type by name. Method is case insensitive.
+    Returns the first interview type with the given name, or None 
+    if no interview type is found.
+    """
+    return InterviewTypeDocument.objects(name__iexact=name).first()
 
 
 def add_message_to_interview_session(

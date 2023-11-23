@@ -10,12 +10,18 @@ from fastapi import WebSocket
 import backend.services.openai.client as LLMClient
 from backend.conf import get_openai_model
 from backend.db.dao import interviews_dao
-from backend.db.schemas.interviews import (ConversationEntryEmbedded,
-                                           ConversationEntryRole)
-from backend.routers.conversation.models import (CandidateMessage,
-                                                 InterviewerMessage,
-                                                 MessageType, is_stop_message,
-                                                 send_message)
+from backend.db.schemas.interviews import (
+    ConversationEntryEmbedded,
+    ConversationEntryModel,
+    ConversationEntryRole,
+)
+from backend.routers.conversation.models import (
+    CandidateMessage,
+    InterviewerMessage,
+    MessageType,
+    is_stop_message,
+    send_message,
+)
 from backend.services.eleven_labs.client import speak_sentence as send_speech
 from backend.services.openai.models import GPTMessages
 
@@ -48,6 +54,7 @@ async def generate_response(
     full_text, _ = await asyncio.gather(send_task, listen_task)
 
     end_time = datetime.now()
+    model = ConversationEntryModel.from_string(get_openai_model())
 
     # Save reponse to db
     interviews_dao.add_message_to_interview_session(
@@ -58,7 +65,7 @@ async def generate_response(
             tokens=LLMClient.get_num_tokens(full_text),
             start_timestamp=start_time,
             end_timestamp=end_time,
-            model=get_openai_model(),
+            model=model,
         ),
     )
 

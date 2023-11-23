@@ -1,8 +1,15 @@
 from enum import Enum, auto
 
-from mongoengine import (DateTimeField, Document, EmbeddedDocument,
-                         EmbeddedDocumentField, IntField, ListField,
-                         StringField, URLField)
+from mongoengine import (
+    DateTimeField,
+    Document,
+    EmbeddedDocument,
+    EmbeddedDocumentField,
+    IntField,
+    ListField,
+    StringField,
+    URLField,
+)
 
 
 class ConversationEntryRole(Enum):
@@ -11,8 +18,28 @@ class ConversationEntryRole(Enum):
     SYSTEM = "system"
 
 
+class ConversationEntryModel(Enum):
+    GPT_4 = "gpt-4"
+    GPT_3_5_TURBO = "gpt-3.5-turbo"
+    NONE = "none"
+
+    def from_string(model: str):
+        if model == "gpt-4":
+            return ConversationEntryModel.GPT_4
+        elif model == "gpt-3.5-turbo":
+            return ConversationEntryModel.GPT_3_5_TURBO
+        elif model == "none":
+            return ConversationEntryModel.NONE
+        else:
+            raise ValueError(f"Invalid model: {model}")
+
+
+def is_output_role(role: ConversationEntryRole) -> bool:
+    return role == ConversationEntryRole.INTERVIEWER
+
+
 class InterviewTypeBase:
-    name = StringField(required=True)
+    name = StringField(required=True, primary_key=True)
     short_description = StringField(required=True)
     description = StringField(required=True)
     job_description = StringField(required=True)
@@ -25,7 +52,7 @@ class InterviewTypeEmbedded(EmbeddedDocument, InterviewTypeBase):
 
 
 class InterviewTypeDocument(Document, InterviewTypeBase):
-    meta = {"collection": "interview_types", "indexes": ["name"]}
+    meta = {"collection": "interview_types"}
 
 
 class ConversationEntryEmbedded(EmbeddedDocument):
@@ -36,7 +63,11 @@ class ConversationEntryEmbedded(EmbeddedDocument):
     tokens = IntField(required=True)
     start_timestamp = DateTimeField(required=True)
     end_timestamp = DateTimeField(required=True)
-    model = StringField(required=True)
+    model = StringField(
+        required=True,
+        choices=tuple(choice.value for choice in ConversationEntryModel),
+        default=ConversationEntryModel.NONE.value,
+    )
 
 
 class InterviewSessionDocument(Document):
@@ -47,7 +78,7 @@ class InterviewSessionDocument(Document):
     total_input_tokens = IntField(required=False)
     total_output_tokens = IntField(required=False)
     conversation_history = ListField(
-        EmbeddedDocumentField(ConversationEntryEmbedded), required=True
+        EmbeddedDocumentField(ConversationEntryEmbedded), default=[]
     )
 
     meta = {

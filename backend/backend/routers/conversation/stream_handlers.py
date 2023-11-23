@@ -6,7 +6,6 @@ from multiprocessing.pool import ThreadPool
 from fastapi import WebSocket
 from google.cloud import speech
 
-from backend.conf import get_google_credentials, get_openai_model
 from backend.db.dao import interviews_dao
 from backend.db.schemas.interviews import (ConversationEntryEmbedded,
                                            ConversationEntryRole)
@@ -75,7 +74,6 @@ async def handle_audio_input(
             ),  # TODO Implement token calculation properly
             start_timestamp=start_timestamp,
             end_timestamp=end_timestamp,
-            model=get_openai_model(),
         ),
     )
     return text_data
@@ -153,7 +151,6 @@ async def handle_text_stream(
             ),  # TODO Implement token calculation properly
             start_timestamp=start_timestamp,
             end_timestamp=end_timestamp,
-            model=get_openai_model(),
         ),
     )
     return user_response
