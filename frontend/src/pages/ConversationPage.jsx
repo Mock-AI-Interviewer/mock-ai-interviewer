@@ -21,6 +21,7 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
     const webSocketRef = useRef(null); // Ref to store the WebSocket instance
     const WEB_SOCKET_ENDPOINT = `${config.backendApiWebsocketUrl}/interview/${interview_id}/response`
     const WEB_SOCKET_FULL_URL = `${WEB_SOCKET_ENDPOINT}?user_id=${user_id}&enable_audio_input=${enableAudioInput}&enable_audio_output=${enableAudioOutput}`;
+    const STOP_INTERVIEW_ENDPOINT = `${config.backendApiUrl}/interview/${interview_id}/stop`
     const AUDIO_MESSAGE = "audio"
     const TEXT_MESSAGE = "text"
     const STOP_MESSAGE = "STOP_MESSAGE";
@@ -257,8 +258,25 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
 
     const handleStopInterview = () => {
         sendStopMessage();
+        stopInterview();
         stopWebSocket();
     };
+
+    function stopInterview() {
+        fetch(STOP_INTERVIEW_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        })
+          .then(response => response.json()) // Parsing the JSON response
+          .then(data => {
+            console.log('Success:', data); // Handle the response data
+          })
+          .catch((error) => {
+            console.error('Error:', error);
+          });
+      }
 
     const handleStartInterview = async () => {
         if (audioContext.state === 'suspended') {
