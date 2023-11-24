@@ -39,16 +39,14 @@ async def conversation_handler(
     """
     await websocket.accept()
 
-    # TODO remove this when client side can send correct interview id
-    interview_id = CURRENT_CONVERSATION_ID
     try:
         while True:
             LOGGER.info("==== Handling generated response ====")
-            # await generate_response(
-            #     websocket=websocket,
-            #     enable_audio_output=enable_audio_output,
-            #     interview_id=interview_id,
-            # )
+            await generate_response(
+                websocket=websocket,
+                enable_audio_output=enable_audio_output,
+                interview_id=interview_id,
+            )
 
             LOGGER.info("==== Handling user input ====")
             if enable_audio_input:

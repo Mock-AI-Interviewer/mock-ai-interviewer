@@ -40,7 +40,7 @@ class ConversationEntryModel(Enum):
 
 
 def is_output_role(role: ConversationEntryRole) -> bool:
-    return role == ConversationEntryRole.INTERVIEWER
+    return role == ConversationEntryRole.INTERVIEWER.value
 
 
 class InterviewTypeBase:

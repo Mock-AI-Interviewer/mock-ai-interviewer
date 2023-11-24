@@ -89,7 +89,7 @@ def review_interview(interview_id: str) -> models.InterviewSessionReviewRead:
     if interview_session.end_time is None:
         raise models.InterviewNotFinishedError("Interview session has not been finished yet")
     if interview_session.review is not None:
-        raise models.InterviewAlreadyReviewedError("Interview session has already been reviewed")
+        return model_converter.convert_db_interview_session_document_to_read(interview_session)
 
     # Get conversation history
     # Add a new entry to the end of the list with the role as SYSTEM

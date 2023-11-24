@@ -50,8 +50,6 @@ async def review_interview(
         raise HTTPException(status_code=404, detail=str(e))
     except models.InterviewNotFinishedError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except models.InterviewAlreadyReviewedError as e:
-        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.post("/session/{interview_id}/end")

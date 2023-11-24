@@ -6,11 +6,8 @@ from multiprocessing.pool import ThreadPool
 from fastapi import WebSocket
 from google.cloud import speech
 
-from backend.db.dao import interviews
-from backend.db.models.interviews import (
-    ConversationEntryEmbedded,
-    ConversationEntryRole,
-)
+from backend.db.dao import interviews as interviews_dao
+from backend.db.models import interviews as db_models
 from backend.routers.conversation.models import (
     CandidateMessage,
     RecievedStopMessageException,
@@ -47,6 +44,7 @@ async def handle_audio_input(
     """
     transcribe_task = None
     start_timestamp = datetime.now()
+    user_response = ""  # TODO added this because it was cauding errors, needs to be fixed
     while True:
         message = await websocket.receive()
         if "bytes" in message:
@@ -68,16 +66,17 @@ async def handle_audio_input(
 
     end_timestamp = datetime.now()
 
-    interviews.add_message_to_interview_session(
+    interviews_dao.add_message_to_interview_session(
         interview_id=interview_id,
-        conversation_entry=ConversationEntryEmbedded(
-            role=ConversationEntryRole.CANDIDATE.value,
+        conversation_entry=db_models.ConversationEntryEmbedded(
+            role=db_models.ConversationEntryRole.CANDIDATE.value,
             message=user_response,
             tokens=len(
                 user_response.split(" ")
             ),  # TODO Implement token calculation properly
             start_timestamp=start_timestamp,
             end_timestamp=end_timestamp,
+            model=db_models.ConversationEntryModel.NONE.value,
         ),
     )
     return text_data
@@ -145,16 +144,17 @@ async def handle_text_stream(
     end_timestamp = datetime.now()
 
     # Save reponse to db
-    interviews.add_message_to_interview_session(
+    interviews_dao.interviews.add_message_to_interview_session(
         interview_id=interview_id,
-        conversation_entry=ConversationEntryEmbedded(
-            role=ConversationEntryRole.CANDIDATE.value,
+        conversation_entry=db_models.ConversationEntryEmbedded(
+            role=db_models.ConversationEntryRole.CANDIDATE.value,
             message=user_response,
             tokens=len(
                 user_response.split(" ")
             ),  # TODO Implement token calculation properly
             start_timestamp=start_timestamp,
             end_timestamp=end_timestamp,
+            model=db_models.ConversationEntryModel.NONE.value,
         ),
     )
     return user_response
