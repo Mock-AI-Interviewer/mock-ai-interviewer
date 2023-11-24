@@ -2,7 +2,7 @@ from typing import List
 
 from pydantic import BaseModel, validator
 
-from backend.db.schemas.interviews import ConversationEntryEmbedded, InterviewSessionDocument
+from backend.db.models.interviews import ConversationEntryEmbedded, InterviewSessionDocument
 
 
 class GPTMessageEntry(BaseModel):

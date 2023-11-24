@@ -18,20 +18,25 @@ class ConversationEntryRole(Enum):
     SYSTEM = "system"
 
 
+class InvalidModelError(ValueError):
+    """Raised when a unsupported llm model is used"""
+
+    pass
+
+
 class ConversationEntryModel(Enum):
     GPT_4 = "gpt-4"
+    GPT_4_1106_PREVIEW = "gpt-4-1106-preview"
     GPT_3_5_TURBO = "gpt-3.5-turbo"
+    GPT_3_5_TURBO_1106 = "gpt-3.5-turbo-1106"
     NONE = "none"
 
-    def from_string(model: str):
-        if model == "gpt-4":
-            return ConversationEntryModel.GPT_4
-        elif model == "gpt-3.5-turbo":
-            return ConversationEntryModel.GPT_3_5_TURBO
-        elif model == "none":
-            return ConversationEntryModel.NONE
-        else:
-            raise ValueError(f"Invalid model: {model}")
+    @staticmethod
+    def from_string(model_str: str):
+        for model in ConversationEntryModel:
+            if model.value == model_str:
+                return model
+        raise InvalidModelError(f"Invalid model: {model_str}")
 
 
 def is_output_role(role: ConversationEntryRole) -> bool:
@@ -64,10 +69,13 @@ class ConversationEntryEmbedded(EmbeddedDocument):
     start_timestamp = DateTimeField(required=True)
     end_timestamp = DateTimeField(required=True)
     model = StringField(
-        required=True,
-        choices=tuple(choice.value for choice in ConversationEntryModel),
-        default=ConversationEntryModel.NONE.value,
+        required=True, choices=tuple(choice.value for choice in ConversationEntryModel)
     )
+
+
+class InterviewReviewEmbeedded(EmbeddedDocument):
+    score = StringField(required=True)
+    feedback = StringField(required=True)
 
 
 class InterviewSessionDocument(Document):
@@ -75,11 +83,12 @@ class InterviewSessionDocument(Document):
     user_id = StringField(required=True)
     start_time = DateTimeField(required=False)
     end_time = DateTimeField(required=False)
-    total_input_tokens = IntField(required=False)
-    total_output_tokens = IntField(required=False)
+    total_input_tokens = IntField(required=False, default=0)
+    total_output_tokens = IntField(required=False, default=0)
     conversation_history = ListField(
         EmbeddedDocumentField(ConversationEntryEmbedded), default=[]
     )
+    review = EmbeddedDocumentField(InterviewReviewEmbeedded, required=False)
 
     meta = {
         "collection": "interview_sessions",

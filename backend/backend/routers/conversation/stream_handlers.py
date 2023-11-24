@@ -6,12 +6,16 @@ from multiprocessing.pool import ThreadPool
 from fastapi import WebSocket
 from google.cloud import speech
 
-from backend.db.dao import interviews_dao
-from backend.db.schemas.interviews import (ConversationEntryEmbedded,
-                                           ConversationEntryRole)
-from backend.routers.conversation.models import (CandidateMessage,
-                                                 RecievedStopMessageException,
-                                                 is_stop_message)
+from backend.db.dao import interviews
+from backend.db.models.interviews import (
+    ConversationEntryEmbedded,
+    ConversationEntryRole,
+)
+from backend.routers.conversation.models import (
+    CandidateMessage,
+    RecievedStopMessageException,
+    is_stop_message,
+)
 from backend.services.google.client import SPEECH_CLIENT
 
 LOGGER = logging.getLogger(__name__)
@@ -64,8 +68,8 @@ async def handle_audio_input(
 
     end_timestamp = datetime.now()
 
-    interviews_dao.add_message_to_interview_session(
-        session_id=interview_id,
+    interviews.add_message_to_interview_session(
+        interview_id=interview_id,
         conversation_entry=ConversationEntryEmbedded(
             role=ConversationEntryRole.CANDIDATE.value,
             message=user_response,
@@ -141,8 +145,8 @@ async def handle_text_stream(
     end_timestamp = datetime.now()
 
     # Save reponse to db
-    interviews_dao.add_message_to_interview_session(
-        session_id=interview_id,
+    interviews.add_message_to_interview_session(
+        interview_id=interview_id,
         conversation_entry=ConversationEntryEmbedded(
             role=ConversationEntryRole.CANDIDATE.value,
             message=user_response,

@@ -3,9 +3,9 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException, Path
 
-from backend.converters import interview as model_converter
-from backend.db.dao import interviews_dao
-from backend.models import interview as models
+from backend.converters import interviews as model_converter
+from backend.db.dao import interviews as interviews_dao
+from backend.models import interviews as models
 from backend.services import interviews as service
 
 LOGGER = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ async def initialise_interview(
     """Initialise an interview session with the given configuration"""
     try:
         return service.create_interview_session(interview_config)
-    except ValueError as e:
+    except models.NotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
 
@@ -35,8 +35,23 @@ async def start_interview(
     """Start an interview session"""
     try:
         return service.start_interview(interview_id)
-    except ValueError as e:
+    except models.NotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post("/session/{interview_id}/review")
+async def review_interview(
+    interview_id: str = Path(...),
+) -> models.InterviewSessionReviewRead:
+    """Review an interview session"""
+    try:
+        return service.review_interview(interview_id)
+    except models.NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except models.InterviewNotFinishedError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except models.InterviewAlreadyReviewedError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.post("/session/{interview_id}/end")
@@ -46,21 +61,17 @@ async def end_interview(
     """End an interview session"""
     try:
         return service.end_interview(interview_id)
-    except ValueError as e:
+    except models.NotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except models.InterviewNotStartedError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 
 @router.get("/types", response_model=List[models.InterviewTypeRead])
 async def list_interview_types():
     """List all available interview types"""
-    all_interview_types = interviews_dao.get_all_interview_types()
-    ret = []
-    for interview_type in all_interview_types:
-        interview_type_read = model_converter.convert_db_interview_type_to_read(
-            interview_type
-        )
-        ret.append(interview_type_read)
-    return ret
+    return service.list_all_interview_types()
 
 
 @router.get("/types/{name}")
@@ -68,6 +79,17 @@ async def get_interview_type(name: str = Path(...)) -> models.InterviewTypeRead:
     """Get an interview type by name.
     If the interview type does not exist, raise a 404 error."""
     try:
-        return service.get_interview_type(name)
-    except ValueError as e:
+        return service.get_interview_type_read(name)
+    except models.NotFoundError as e:
         raise HTTPException(status_code=404, detail="Interview type not found")
+
+@router.get("/session/{interview_id}")
+async def get_interview_session(
+    interview_id: str = Path(...),
+) -> models.InterviewSessionRead:
+    """Get an interview session by id.
+    If the interview session does not exist, raise a 404 error."""
+    try:
+        return service.get_interview_type_read(interview_id)
+    except models.NotFoundError as e:
+        raise HTTPException(status_code=404, detail="Interview session not found")
