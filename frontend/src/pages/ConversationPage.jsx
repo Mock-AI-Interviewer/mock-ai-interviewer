@@ -257,9 +257,9 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
     };
 
     const handleStopInterview = () => {
+        setIsInterviewStarted(false);
         sendStopMessage();
         stopWebSocket();
-        setIsInterviewStarted(false);
     };
 
     const handleStartInterview = async () => {
@@ -398,12 +398,34 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
                         </Button>
                     )}
                 </Box>
-                <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center', gap: 1 }}>
-                    <Button onClick={handleInterruptInterviewer} variant="contained" id="interruptInterviewerButton" sx={{ backgroundColor: 'orange', '&:hover': { backgroundColor: 'darkorange' } }}>Interrupt</Button>
-                </Box>
+                {isInterviewStarted && (
+                    <>
+                        <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center', gap: 1 }}>
+                            <Button onClick={handleInterruptInterviewer} variant="contained" id="interruptInterviewerButton" sx={{ backgroundColor: 'orange', '&:hover': { backgroundColor: 'darkorange' } }}>Interrupt</Button>
+                        </Box>
+                    </>
+                )}
                 <Box sx={{ mt: 1, display: 'flex', justifyContent: 'center', gap: 1 }}>
-                    <Button onClick={handleStartInterview} variant="contained" color="success" id="startInterviewButton">Start Interview</Button>
-                    <Button onClick={handleStopInterview} variant="contained" color="error" id="stopInterviewButton">Stop Interview</Button>
+                    <Button
+                        onClick={isInterviewStarted ? handleStopInterview : handleStartInterview}
+                        variant="contained"
+                        color={isInterviewStarted ? "error" : "success"}
+                        sx={isInterviewStarted ? {} : {
+                            // Custom styles for the "Start Interview" button
+                            padding: '15px 30px',
+                            fontSize: '1.2rem',
+                            backgroundColor: '#4caf50', // A greenish shade
+                            '&:hover': {
+                                backgroundColor: '#43a047', // A slightly darker green for the hover state
+                            },
+                            borderRadius: '20px',
+                            boxShadow: '0px 0px 10px rgba(0,0,0,0.2)',
+                            // Add more styles as needed
+                        }}
+                        id={isInterviewStarted ? "stopInterviewButton" : "startInterviewButton"}
+                    >
+                        {isInterviewStarted ? "Stop Interview" : "Start Interview"}
+                    </Button>
                 </Box>
                 {/* <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1 }}>
                     <Button onClick={toggleRecording} variant="contained" color="success" id="recordButton">{recording ? 'Stop Recording' : 'Start Recording'}</Button>
