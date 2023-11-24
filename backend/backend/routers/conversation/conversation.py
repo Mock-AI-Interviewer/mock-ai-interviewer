@@ -44,11 +44,11 @@ async def conversation_handler(
     try:
         while True:
             LOGGER.info("==== Handling generated response ====")
-            await generate_response(
-                websocket=websocket,
-                enable_audio_output=enable_audio_output,
-                interview_id=interview_id,
-            )
+            # await generate_response(
+            #     websocket=websocket,
+            #     enable_audio_output=enable_audio_output,
+            #     interview_id=interview_id,
+            # )
 
             LOGGER.info("==== Handling user input ====")
             if enable_audio_input:

@@ -17,6 +17,7 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
     const [recording, setRecording] = useState(false);
     const recorderRef = useRef(null);
     const [isRecorderLoaded, setIsRecorderLoaded] = useState(false);
+    const [isInterviewStarted, setIsInterviewStarted] = useState(false);
     const sendIntervalRef = useRef(null);
     const webSocketRef = useRef(null); // Ref to store the WebSocket instance
     const WEB_SOCKET_ENDPOINT = `${config.backendApiWebsocketUrl}/interview/${interview_id}/response`
@@ -260,6 +261,7 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
         sendStopMessage();
         stopInterview();
         stopWebSocket();
+        setIsInterviewStarted(false);
     };
 
     function stopInterview() {
@@ -282,6 +284,7 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
         if (audioContext.state === 'suspended') {
             await audioContext.resume();
         }
+        setIsInterviewStarted(true);
         webSocketRef.current = createWebSocket();
         drawVisual();
     };
@@ -367,28 +370,53 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
                 </div> */}
                 <Divider sx={{ mt: 2, mb: 2 }} />
                 <Typography variant="h6" id="turnAlert"> {turnAlert} </Typography>
-                <TextField
-                    id="userInput"
-                    placeholder="Type something..."
-                    multiline
-                    rows={5}
-                    value={userInput}
-                    onChange={e => setUserInput(e.target.value)}
-                    sx={{
-                        width: '50%',
-                        height: '150px',
-                        resize: 'both',
-                        mb: 1,
-                        overflow: 'auto',
-                    }}
-                />
+
+
+                {enableAudioInput === false && (
+                    <>
+                    <TextField
+                        id="userInput"
+                        placeholder="Type something..."
+                        multiline
+                        rows={5}
+                        value={userInput}
+                        onChange={e => setUserInput(e.target.value)}
+                        sx={{
+                            width: '50%',
+                            height: '150px',
+                            resize: 'both',
+                            mb: 1,
+                            overflow: 'auto',
+                        }}
+                    />
+                    <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center', gap: 1 }}>
+                        <Button onClick={handleSendText} variant="contained" id="sendTextButton">Send</Button>
+                    </Box>
+                 </>
+                )}
                 <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1 }}>
-                    <Button onClick={toggleRecording} variant="contained" color="success" id="recordButton">
-                        {recording ? 'Stop Recording' : 'Start Recording'}
-                    </Button>
+                    {isInterviewStarted && (
+                        <Button
+                            onClick={toggleRecording}
+                            variant="contained"
+                            disabled={turnAlert !== TURN_CANDIDATE} // Disable button if it's not user's turn
+                            sx={{
+                                borderRadius: '50%',
+                                width: 100,
+                                height: 100,
+                                backgroundColor: recording ? 'red' : 'green',
+                                color: 'white',
+                                '&:hover': {
+                                    backgroundColor: recording ? 'darkred' : 'darkgreen',
+                                }
+                            }}
+                            id="recordButton"
+                        >
+                            {recording ? 'Stop' : 'Record'}
+                        </Button>
+                    )}
                 </Box>
                 <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center', gap: 1 }}>
-                    <Button onClick={handleSendText} variant="contained" id="sendTextButton" >Send</Button>
                     <Button onClick={handleInterruptInterviewer} variant="contained" id="interruptInterviewerButton" sx={{ backgroundColor: 'orange', '&:hover': { backgroundColor: 'darkorange' } }}>Interrupt</Button>
                 </Box>
                 <Box sx={{ mt: 1, display: 'flex', justifyContent: 'center', gap: 1 }}>
