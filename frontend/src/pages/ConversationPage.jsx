@@ -381,6 +381,7 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
                         <Button
                             onClick={toggleRecording}
                             variant="contained"
+                            disabled={turnAlert !== TURN_CANDIDATE} // Disable button if it's not user's turn
                             sx={{
                                 borderRadius: '50%',
                                 width: 100,
