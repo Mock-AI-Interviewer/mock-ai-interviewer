@@ -7,34 +7,41 @@ from typing import Iterator, List
 
 from fastapi import WebSocket
 
-import backend.openai.client as LLMClient
-from backend.conf import get_openai_model
-from backend.db.dao import interviews_dao
-from backend.db.schemas.interviews import (ConversationEntryEmbedded,
-                                           ConversationEntryRole)
-from backend.eleven_labs.client import speak_sentence as send_speech
-from backend.openai.models import GPTMessages
-from backend.routers.conversation.models import (CandidateMessage,
-                                                 InterviewerMessage,
-                                                 MessageType, is_stop_message,
-                                                 send_message)
+from backend.db.dao import interviews
+from backend.db.models.interviews import (
+    ConversationEntryEmbedded,
+    ConversationEntryModel,
+    ConversationEntryRole,
+)
+from backend.routers.conversation.models import (
+    CandidateMessage,
+    InterviewerMessage,
+    MessageType,
+    is_stop_message,
+    send_message,
+)
+from backend.services import llm as llm_service
+from backend.services.eleven_labs.client import speak_sentence as send_speech
 
 LOGGER = logging.getLogger(__name__)
-CURRENT_CONVERSATION_ID = interviews_dao.get_last_generated_interview_session().id
 ASYNCIO_WAIT_TIME = 1
 
 _stop_flag = False
 
 
-async def generate_response(websocket: WebSocket, enable_audio_output: bool) -> None:
+async def generate_response(
+    websocket: WebSocket, enable_audio_output: bool, interview_id: str
+) -> None:
     start_time = datetime.now()
 
     # Getting history of messages
-    curr_message_hist = generate_gpt_messages(session_id=CURRENT_CONVERSATION_ID)
+    curr_message_hist = llm_service.generate_llm_messages_from_interview_session(
+        interview_id
+    )
 
     # Retrieve LLM response. Note this doesn't actually get the resopnse
     # It is a generator that yields the response sentance by sentance
-    llm_response = LLMClient.get_response_in_sentences(
+    llm_response = llm_service.get_response_in_sentences(
         messages=curr_message_hist,
         max_tokens=200,
     )
@@ -47,17 +54,18 @@ async def generate_response(websocket: WebSocket, enable_audio_output: bool) -> 
     full_text, _ = await asyncio.gather(send_task, listen_task)
 
     end_time = datetime.now()
+    model = ConversationEntryModel.from_string(llm_service.get_current_model()).value
 
     # Save reponse to db
-    interviews_dao.add_message_to_interview_session(
-        session_id=CURRENT_CONVERSATION_ID,
+    interviews.add_message_to_interview_session(
+        interview_id=interview_id,
         conversation_entry=ConversationEntryEmbedded(
             role=ConversationEntryRole.INTERVIEWER.value,
             message=full_text,
-            tokens=LLMClient.get_num_tokens(full_text),
+            tokens=llm_service.calculate_num_tokens(full_text),
             start_timestamp=start_time,
             end_timestamp=end_time,
-            model=get_openai_model(),
+            model=model,
         ),
     )
 
@@ -72,8 +80,10 @@ async def send_messages(
         if _stop_flag:
             _stop_flag = False
             break
-        full_text.append(sentence.text)
+
         sentence_txt = sentence.text
+        full_text.append(sentence_txt)
+
         if not enable_audio_output:
             await send_message(
                 websocket, InterviewerMessage(type=MessageType.TEXT, data=sentence_txt)
@@ -84,8 +94,9 @@ async def send_messages(
             )
             await send_speech(websocket=websocket, sentence=sentence_txt)
         LOGGER.info(f"Sent sentence: {sentence_txt}")
+
     await send_message(websocket, InterviewerMessage(type=MessageType.STOP, data=""))
-    LOGGER.info("Sent stop message")
+    LOGGER.info("Sent Client Stop Message ------------------")
     return "".join(full_text)
 
 
@@ -109,12 +120,3 @@ async def listen_for_stop(websocket: WebSocket, send_task):
         except asyncio.TimeoutError:
             # TimeoutError is expected, so we can ignore it
             pass
-
-
-def generate_gpt_messages(session_id: str) -> List[dict]:
-    """Generates messages field for use with OpenAI ChatGPT API Calls"""
-    interview_session = interviews_dao.get_interview_session_by_id(session_id)
-    if not interview_session:
-        raise ValueError("Interview session not found.")
-    gpt_messages = GPTMessages.from_interview_session(interview_session)
-    return gpt_messages.get_messages()

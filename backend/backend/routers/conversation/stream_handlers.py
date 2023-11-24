@@ -1,48 +1,132 @@
 import logging
+import queue
 from datetime import datetime
+from multiprocessing.pool import ThreadPool
 
 from fastapi import WebSocket
+from google.cloud import speech
 
-from backend.conf import get_openai_model
-from backend.db.dao import interviews_dao
-from backend.db.schemas.interviews import (ConversationEntryEmbedded,
-                                           ConversationEntryRole)
-from backend.routers.conversation.models import (CandidateMessage,
-                                                 RecievedStopMessageException,
-                                                 is_stop_message)
+from backend.db.dao import interviews as interviews_dao
+from backend.db.models import interviews as db_models
+from backend.routers.conversation.models import (
+    CandidateMessage,
+    RecievedStopMessageException,
+    is_stop_message,
+)
+from backend.services.google.client import SPEECH_CLIENT
 
 LOGGER = logging.getLogger(__name__)
-CURRENT_CONVERSATION = interviews_dao.get_last_generated_interview_session().id
+audio_queue = queue.Queue()
+pool = ThreadPool(processes=1)
 
 
-async def handle_audio_stream(websocket: WebSocket, user_id: str) -> str:
+async def handle_audio_stream(
+    websocket: WebSocket, user_id: str, interview_id: str
+) -> str:
     """
     Handles incoming audio stream until a stop message is received.
     Returns the full text data based of the transcribed audio.
     """
-    ret = []
-    while True:
-        try:
-            text_chunk = await handle_audio_input(websocket, user_id)
-            ret.append(text_chunk)
-        except RecievedStopMessageException:
-            break
-    # TODO finish implementation by saving text
-    return "".join(ret)
+    try:
+        text_chunk = await handle_audio_input(
+            websocket=websocket, user_id=user_id, interview_id=interview_id
+        )
+    except RecievedStopMessageException:
+        raise RecievedStopMessageException
+    return text_chunk
 
 
-async def handle_audio_input(websocket: WebSocket, user_id: str) -> str:
+async def handle_audio_input(
+    websocket: WebSocket, user_id: str, interview_id: str
+) -> str:
     """
     Handles incoming audio data and converts it to text.
     """
-    audio_data = await websocket.receive_bytes()
-    candidate_message = convert_to_candidate_message(audio_data)
-    return str(candidate_message.data)[
-        :10
-    ]  # TODO Dummy implementation, replace with actual implementation that can convert audio to text
+    transcribe_task = None
+    start_timestamp = datetime.now()
+    user_response = ""  # TODO added this because it was cauding errors, needs to be fixed
+    while True:
+        message = await websocket.receive()
+        if "bytes" in message:
+            audio_data = message["bytes"]
+            LOGGER.info("Sending audio chunk to queue")
+            audio_queue.put(audio_data)
+            if transcribe_task is None:
+                transcribe_task = pool.apply_async(transcribe_audio_data)
+        elif "text" in message:
+            text_data = message["text"]
+            if text_data == "recording_stopped":
+                audio_queue.put(None)
+                user_response = transcribe_task.get()
+                LOGGER.info(f"Final Transcript: {user_response}")
+                break
+        elif message["type"] == "websocket.disconnect":
+            LOGGER.info("WebSocket disconnected")
+            break
+
+    end_timestamp = datetime.now()
+
+    interviews_dao.add_message_to_interview_session(
+        interview_id=interview_id,
+        conversation_entry=db_models.ConversationEntryEmbedded(
+            role=db_models.ConversationEntryRole.CANDIDATE.value,
+            message=user_response,
+            tokens=len(
+                user_response.split(" ")
+            ),  # TODO Implement token calculation properly
+            start_timestamp=start_timestamp,
+            end_timestamp=end_timestamp,
+            model=db_models.ConversationEntryModel.NONE.value,
+        ),
+    )
+    return text_data
 
 
-async def handle_text_stream(websocket: WebSocket, user_id: str) -> str:
+def transcribe_audio_data() -> str:
+    ret = []
+    config = speech.RecognitionConfig(
+        encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+        sample_rate_hertz=44100,  # Adjust the sample rate to match your audio sample rate
+        language_code="en-US",  # Change the language code to the language of the audio
+        model="video",
+    )
+    streaming_config = speech.StreamingRecognitionConfig(
+        config=config, interim_results=True
+    )
+    responses = SPEECH_CLIENT.streaming_recognize(
+        streaming_config, audio_stream_generator()
+    )
+    for response in responses:
+        if not response.results:
+            continue
+
+        result = response.results[0]  # Extract the transcript from the first result
+        if result.is_final:
+            transcript = result.alternatives[0].transcript
+            ret.append(transcript)
+            LOGGER.info(f"First Result Transcript: {transcript}")
+    LOGGER.info(f"Final Transcript: {' '.join(ret)}")
+    return " ".join(ret)
+
+
+def audio_stream_generator():
+    while True:
+        LOGGER.info("Stream generator")
+        try:
+            audio_data = audio_queue.get(timeout=1)
+        except queue.Empty:
+            continue
+        if audio_data is None:
+            LOGGER.info("Received sentinel value, ending stream.")
+            break
+
+        yield speech.StreamingRecognizeRequest(audio_content=audio_data)
+    LOGGER.info("Recording stopped, ending audio stream.")
+
+
+async def handle_text_stream(
+    websocket: WebSocket, user_id: str, interview_id: str
+) -> str:
     """
     Handles incoming text stream until a stop message is received.
     Returns the full text data.
@@ -60,15 +144,17 @@ async def handle_text_stream(websocket: WebSocket, user_id: str) -> str:
     end_timestamp = datetime.now()
 
     # Save reponse to db
-    interviews_dao.add_message_to_interview_session(
-        session_id=CURRENT_CONVERSATION,
-        conversation_entry=ConversationEntryEmbedded(
-            role=ConversationEntryRole.CANDIDATE.value,
+    interviews_dao.interviews.add_message_to_interview_session(
+        interview_id=interview_id,
+        conversation_entry=db_models.ConversationEntryEmbedded(
+            role=db_models.ConversationEntryRole.CANDIDATE.value,
             message=user_response,
-            tokens=len(user_response.split(" ")),   # TODO Implement token calculation properly
+            tokens=len(
+                user_response.split(" ")
+            ),  # TODO Implement token calculation properly
             start_timestamp=start_timestamp,
             end_timestamp=end_timestamp,
-            model=get_openai_model(),
+            model=db_models.ConversationEntryModel.NONE.value,
         ),
     )
     return user_response

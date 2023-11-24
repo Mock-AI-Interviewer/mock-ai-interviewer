@@ -1,6 +1,6 @@
 import { Container } from "@mui/material";
 import React, { useState, useEffect } from 'react';
-import TopAppBar from "../components/TopAppBar";
+import TopAppBar from "components/TopAppBar";
 
 function AudioRecorderPage() {
     const [recording, setRecording] = useState(false);

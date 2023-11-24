@@ -29,7 +29,7 @@ def setup_logging():
     """Setup logging configuration"""
     logging.basicConfig(
         level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        format="%(asctime)s - %(name)s:Line:%(lineno)d - %(levelname)s - %(message)s",
         datefmt="%d-%b-%y %H:%M:%S",
     )
 
@@ -68,8 +68,10 @@ def setup_google():
         config
     )
 
+
 def setup_elevn_labs():
     set_api_key(get_eleven_labs_api_key())
+
 
 def get_root_package_path():
     return os.path.dirname(os.path.realpath(__file__))
@@ -108,7 +110,9 @@ def get_google_credentials():
 
 
 def get_google_service_account_file_path():
-    return os.path.join(get_root_package_path(), "google", "service_account.json")
+    return os.path.join(
+        get_root_package_path(), "services", "google", "service_account.json"
+    )
 
 
 def get_google_service_account_private_key():
@@ -118,5 +122,10 @@ def get_google_service_account_private_key():
 def get_google_service_account_private_key_id():
     return os.getenv("GOOGLE_SA_PRIVATE_KEY_ID")
 
+
 def get_jinja_templates_path():
-    return os.path.join(get_root_package_path(), "html_templates")  
+    return os.path.join(get_root_package_path(), "html_templates")
+
+def get_review_prompt():
+    """Returns the review prompt for the LLM API"""
+    return os.getenv("LLM_REVIEW_PROMPT")
