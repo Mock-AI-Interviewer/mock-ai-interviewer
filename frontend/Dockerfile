@@ -10,7 +10,8 @@ RUN npm run build
 FROM nginx:alpine
 
 # Create .htpasswd file
-ARG PASSWORD
+ARG FRONTEND_PASSWORD
+ARG FRONTEND_USERNAME
 RUN apk add --no-cache apache2-utils && \
     htpasswd -b -c /etc/nginx/.htpasswd $FRONTEND_USERNAME $FRONTEND_PASSWORD
 

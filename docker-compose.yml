@@ -6,7 +6,8 @@ services:
     build:
       context: ./frontend
       args:
-        PASSWORD: ${PASSWORD}
+        FRONTEND_PASSWORD: ${FRONTEND_PASSWORD}
+        FRONTEND_USERNAME: ${FRONTEND_USERNAME}
     ports:
       - "3000:80"
     depends_on:
