@@ -1,10 +1,7 @@
 #!/bin/bash
 
 # Load Env Variables
-set -a &&
-source ./backend/.env &&
-source ./frontend/.env &&
-set +a &&
+source ./setup-env.sh
 
 # Get a list of services from docker-compose file
 services=$(docker-compose -f docker-compose.local.yml config --services)

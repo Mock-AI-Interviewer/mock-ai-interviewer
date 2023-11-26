@@ -62,9 +62,8 @@ def setup_google():
     with open(client_file, "r") as file:
         config = json.load(file)
 
-
     # Need to replace the escaped newlines with actual newlines
-    private_key = get_google_service_account_private_key().replace('\\n', '\n')
+    private_key = get_google_service_account_private_key().replace("\\n", "\n")
     config["private_key"] = private_key
     config["private_key_id"] = get_google_service_account_private_key_id()
 
@@ -86,8 +85,10 @@ def get_dot_env_path():
     """Return the path to the .env file"""
     return os.path.join(os.path.dirname(get_root_package_path()), ".env")
 
+
 def get_db_host():
     return os.getenv("DB_HOST")
+
 
 def get_db_name():
     return os.getenv("DB_NAME")
@@ -132,6 +133,7 @@ def get_google_service_account_private_key_id():
 
 def get_jinja_templates_path():
     return os.path.join(get_root_package_path(), "html_templates")
+
 
 def get_review_prompt():
     """Returns the review prompt for the LLM API"""
