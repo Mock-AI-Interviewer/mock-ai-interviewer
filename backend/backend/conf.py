@@ -9,6 +9,7 @@ from elevenlabs import set_api_key
 
 
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
+LOGGER = logging.getLogger(__name__)
 
 _google_sa_credentials = None
 
@@ -45,7 +46,8 @@ def setup_env_variables():
 
 def setup_db_connection():
     """Connect to MongoDB (it will create a new database if it doesn"t exist)"""
-    connect(get_db_name(), host="localhost", port=27017)
+    LOGGER.info(f"Connecting to MongoDB with configuration: {get_db_host()}:27017")
+    connect(get_db_name(), host=get_db_host(), port=27017)
 
 
 def setup_openai():
@@ -60,7 +62,10 @@ def setup_google():
     with open(client_file, "r") as file:
         config = json.load(file)
 
-    config["private_key"] = get_google_service_account_private_key()
+
+    # Need to replace the escaped newlines with actual newlines
+    private_key = get_google_service_account_private_key().replace('\\n', '\n')
+    config["private_key"] = private_key
     config["private_key_id"] = get_google_service_account_private_key_id()
 
     global _google_sa_credentials
@@ -81,6 +86,8 @@ def get_dot_env_path():
     """Return the path to the .env file"""
     return os.path.join(os.path.dirname(get_root_package_path()), ".env")
 
+def get_db_host():
+    return os.getenv("DB_HOST")
 
 def get_db_name():
     return os.getenv("DB_NAME")

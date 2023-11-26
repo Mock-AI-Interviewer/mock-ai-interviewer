@@ -2,14 +2,18 @@ version: '3.7'
 
 services:
   frontend:
-    image: public.ecr.aws/h2s4i0x5/mock-ai-interviewer-frontend:latest
+    build:
+      context: ./frontend
+      args:
+        FRONTEND_PASSWORD: ${FRONTEND_PASSWORD}
+        FRONTEND_USERNAME: ${FRONTEND_USERNAME}
     ports:
       - "80:80"
     depends_on:
       - backend
 
   backend:
-    image: public.ecr.aws/h2s4i0x5/mock-ai-interviewer-backend:latest
+    build: ./backend
     ports:
       - "8000:8000"
     depends_on:
