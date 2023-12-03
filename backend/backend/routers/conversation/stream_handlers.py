@@ -6,13 +6,13 @@ from multiprocessing.pool import ThreadPool
 from fastapi import WebSocket
 from google.cloud import speech
 
-from backend.conf import get_google_credentials, get_openai_model
-from backend.db.dao import interviews_dao
-from backend.db.schemas.interviews import (ConversationEntryEmbedded,
-                                           ConversationEntryRole)
-from backend.routers.conversation.models import (CandidateMessage,
-                                                 RecievedStopMessageException,
-                                                 is_stop_message)
+from backend.db.dao import interviews as interviews_dao
+from backend.db.models import interviews as db_models
+from backend.routers.conversation.models import (
+    CandidateMessage,
+    RecievedStopMessageException,
+    is_stop_message,
+)
 from backend.services.google.client import SPEECH_CLIENT
 
 LOGGER = logging.getLogger(__name__)
@@ -44,6 +44,7 @@ async def handle_audio_input(
     """
     transcribe_task = None
     start_timestamp = datetime.now()
+    user_response = ""  # TODO added this because it was cauding errors, needs to be fixed
     while True:
         message = await websocket.receive()
         if "bytes" in message:
@@ -66,16 +67,16 @@ async def handle_audio_input(
     end_timestamp = datetime.now()
 
     interviews_dao.add_message_to_interview_session(
-        session_id=interview_id,
-        conversation_entry=ConversationEntryEmbedded(
-            role=ConversationEntryRole.CANDIDATE.value,
+        interview_id=interview_id,
+        conversation_entry=db_models.ConversationEntryEmbedded(
+            role=db_models.ConversationEntryRole.CANDIDATE.value,
             message=user_response,
             tokens=len(
                 user_response.split(" ")
             ),  # TODO Implement token calculation properly
             start_timestamp=start_timestamp,
             end_timestamp=end_timestamp,
-            model=get_openai_model(),
+            model=db_models.ConversationEntryModel.NONE.value,
         ),
     )
     return text_data
@@ -143,17 +144,17 @@ async def handle_text_stream(
     end_timestamp = datetime.now()
 
     # Save reponse to db
-    interviews_dao.add_message_to_interview_session(
-        session_id=interview_id,
-        conversation_entry=ConversationEntryEmbedded(
-            role=ConversationEntryRole.CANDIDATE.value,
+    interviews_dao.interviews.add_message_to_interview_session(
+        interview_id=interview_id,
+        conversation_entry=db_models.ConversationEntryEmbedded(
+            role=db_models.ConversationEntryRole.CANDIDATE.value,
             message=user_response,
             tokens=len(
                 user_response.split(" ")
             ),  # TODO Implement token calculation properly
             start_timestamp=start_timestamp,
             end_timestamp=end_timestamp,
-            model=get_openai_model(),
+            model=db_models.ConversationEntryModel.NONE.value,
         ),
     )
     return user_response

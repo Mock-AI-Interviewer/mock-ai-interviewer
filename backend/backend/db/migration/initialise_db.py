@@ -9,7 +9,7 @@ import logging
 import os
 
 from backend.conf import get_root_package_path, initialise_app
-from backend.db.schemas.interviews import (
+from backend.db.models.interviews import (
     InterviewSessionDocument,
     InterviewTypeDocument,
 )

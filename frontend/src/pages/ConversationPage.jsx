@@ -6,8 +6,9 @@ import PATHS from "paths";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from 'react-router-dom';
 
-function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOutput = true, interview_id = "-1" }) {
+function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOutput = true }) {
     const { state } = useLocation();
+    const { interviewType, interviewId } = state;
     const navigate = useNavigate();
     const [userInput, setUserInput] = useState('');
     const TURN_INTERVIEWER = "Interviewer's Turn";
@@ -20,8 +21,10 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
     const [isInterviewStarted, setIsInterviewStarted] = useState(false);
     const sendIntervalRef = useRef(null);
     const webSocketRef = useRef(null); // Ref to store the WebSocket instance
-    const WEB_SOCKET_ENDPOINT = `${config.backendApiWebsocketUrl}/interview/${interview_id}/response`
+    const WEB_SOCKET_ENDPOINT = `${config.backendApiWebsocketUrl}/interview/${interviewId}/response`
     const WEB_SOCKET_FULL_URL = `${WEB_SOCKET_ENDPOINT}?user_id=${user_id}&enable_audio_input=${enableAudioInput}&enable_audio_output=${enableAudioOutput}`;
+    const START_INTERVIEW_ENDPOINT = `${config.backendApiUrl}/interview/session/${interviewId}/start`
+    const STOP_INTERVIEW_ENDPOINT = `${config.backendApiUrl}/interview/session/${interviewId}/end`
     const AUDIO_MESSAGE = "audio"
     const TEXT_MESSAGE = "text"
     const STOP_MESSAGE = "STOP_MESSAGE";
@@ -37,8 +40,8 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
     let isBuffering = true; // New flag to manage the buffering state
     let nextTime = 0; // Tracks when the next audio chunk should start.
 
-    // Extract interviewType from location state
-    const interviewType = state?.interviewType;
+    // // Extract interviewType from location state
+    // const interviewType = state?.interviewType;
 
 
     const addMessage = (newMessage) => {
@@ -47,7 +50,7 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
 
     useEffect(() => {
         // Check if interviewType is not set and navigate
-        if (!interviewType) {
+        if (!interviewType || !interviewId) {
             navigate(PATHS.HOME);
         }
     }, [interviewType, navigate]);
@@ -259,17 +262,57 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
     const handleStopInterview = () => {
         setIsInterviewStarted(false);
         sendStopMessage();
+        stopInterview();
         stopWebSocket();
+        setIsInterviewStarted(false);
+        navigate(PATHS.RESULTS, {
+            state: {
+                interviewId: interviewId
+            }
+        });
     };
+
+    function stopInterview() {
+        fetch(STOP_INTERVIEW_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+            .then(response => response.json()) // Parsing the JSON response
+            .then(data => {
+                console.log('Success:', data); // Handle the response data
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    }
 
     const handleStartInterview = async () => {
         if (audioContext.state === 'suspended') {
             await audioContext.resume();
         }
         setIsInterviewStarted(true);
+        startInterview()
         webSocketRef.current = createWebSocket();
         drawVisual();
     };
+
+    function startInterview() {
+        fetch(START_INTERVIEW_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+            .then(response => response.json()) // Parsing the JSON response
+            .then(data => {
+                console.log('Success:', data); // Handle the response data
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    }
 
     const handleInterruptInterviewer = async () => {
         sendStopMessage();
@@ -356,25 +399,25 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
 
                 {enableAudioInput === false && (
                     <>
-                    <TextField
-                        id="userInput"
-                        placeholder="Type something..."
-                        multiline
-                        rows={5}
-                        value={userInput}
-                        onChange={e => setUserInput(e.target.value)}
-                        sx={{
-                            width: '50%',
-                            height: '150px',
-                            resize: 'both',
-                            mb: 1,
-                            overflow: 'auto',
-                        }}
-                    />
-                    <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center', gap: 1 }}>
-                        <Button onClick={handleSendText} variant="contained" id="sendTextButton">Send</Button>
-                    </Box>
-                 </>
+                        <TextField
+                            id="userInput"
+                            placeholder="Type something..."
+                            multiline
+                            rows={5}
+                            value={userInput}
+                            onChange={e => setUserInput(e.target.value)}
+                            sx={{
+                                width: '50%',
+                                height: '150px',
+                                resize: 'both',
+                                mb: 1,
+                                overflow: 'auto',
+                            }}
+                        />
+                        <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center', gap: 1 }}>
+                            <Button onClick={handleSendText} variant="contained" id="sendTextButton">Send</Button>
+                        </Box>
+                    </>
                 )}
                 <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1 }}>
                     {isInterviewStarted && (

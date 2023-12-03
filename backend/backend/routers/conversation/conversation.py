@@ -7,7 +7,7 @@ from websockets.exceptions import ConnectionClosedOK
 from backend.common import get_jinja_templates
 from backend.conf import get_root_package_path
 from backend.constants import STOP_MESSAGE_PATTERN
-from backend.db.dao import interviews_dao
+from backend.db.dao import interviews
 from backend.routers.conversation.output_handlers import generate_response
 from backend.routers.conversation.stream_handlers import (handle_audio_stream,
                                                           handle_text_stream)
@@ -17,7 +17,7 @@ ROUTER_PREFIX = "/interview"
 WEBSOCKET_PREFIX = "/response"
 TEMPLATE_NAME = "conversation.html"
 AUDIO_FILES_DIRECTORY = get_root_package_path()
-CURRENT_CONVERSATION_ID = interviews_dao.get_last_generated_interview_session().id
+CURRENT_CONVERSATION_ID = interviews.get_last_generated_interview_session().id
 
 router = APIRouter(
     prefix="/interview",
@@ -39,8 +39,6 @@ async def conversation_handler(
     """
     await websocket.accept()
 
-    # TODO remove this when client side can send correct interview id
-    interview_id = CURRENT_CONVERSATION_ID
     try:
         while True:
             LOGGER.info("==== Handling generated response ====")

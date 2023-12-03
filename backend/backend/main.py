@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.routers.candidate import router as candidate_speaking_router
 from backend.routers.conversation.conversation import router as conversation_router
-from backend.routers.interview import router as interview_router
+from backend.routers.interviews import router as interview_router
 
 app = FastAPI()
 

@@ -125,3 +125,7 @@ def get_google_service_account_private_key_id():
 
 def get_jinja_templates_path():
     return os.path.join(get_root_package_path(), "html_templates")
+
+def get_review_prompt():
+    """Returns the review prompt for the LLM API"""
+    return os.getenv("LLM_REVIEW_PROMPT")

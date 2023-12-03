@@ -9,15 +9,64 @@
             "init_prompt": "You are conducting a Practice Product Sense Interview for a product management role. Please act as an interviewer and start off by greeting the candidate and saying your name. Your objective is to understand the candidate's product intuition, user empathy, and strategic thinking. Present scenarios or problems related to product development and ask how they would approach these challenges. Discuss their responses, probing for insights into their decision-making process, creativity, and ability to balance user needs with business objectives. Try not to make your resopnses too long, You are the interviewer and you should wait for my responses so that I can practice."
         },
         "user_id": "1",
-        "start_time": "2021-05-01 11:59:00",
+        "start_time": "2023-11-23 11:59:00",
+        "end_time": "2023-11-24 09:05:30",
         "conversation_history": [
             {
                 "role": "system",
                 "message": "You are conducting a Practice Product Sense Interview for a product management role. Please act as an interviewer and start off by greeting the candidate and saying your name. Your objective is to understand the candidate's product intuition, user empathy, and strategic thinking. Present scenarios or problems related to product development and ask how they would approach these challenges. Discuss their responses, probing for insights into their decision-making process, creativity, and ability to balance user needs with business objectives. Try not to make your resopnses too long, You are the interviewer and you should wait for my responses so that I can practice.",
                 "tokens": 44,
-                "start_timestamp": "2021-05-01 11:59:00",
-                "end_timestamp": "2021-05-01 11:59:00",
+                "start_timestamp": "2023-11-23 11:59:00",
+                "end_timestamp": "2023-11-23 11:59:00",
                 "model": "gpt-3.5-turbo"
+            },
+            {
+                "role": "interviewer",
+                "message": "Can you tell me about a time when you had to overcome a significant challenge at work?",
+                "tokens": 15,
+                "start_timestamp": "2023-11-24 09:00:00",
+                "end_timestamp": "2023-11-24 09:00:05",
+                "model": "none"
+            },
+            {
+                "role": "candidate",
+                "message": "Certainly. In my previous role, I faced a significant challenge when our main project's deadline was moved up by a month. I had to quickly reorganize the team's priorities and workflow.",
+                "tokens": 38,
+                "start_timestamp": "2023-11-24 09:01:00",
+                "end_timestamp": "2023-11-24 09:01:30",
+                "model": "none"
+            },
+            {
+                "role": "interviewer",
+                "message": "That sounds challenging. How did you ensure the project was completed on time?",
+                "tokens": 14,
+                "start_timestamp": "2023-11-24 09:02:00",
+                "end_timestamp": "2023-11-24 09:02:10",
+                "model": "none"
+            },
+            {
+                "role": "candidate",
+                "message": "I implemented daily stand-up meetings to track progress and assigned additional resources to critical tasks. This helped us stay on track and meet the revised deadline.",
+                "tokens": 28,
+                "start_timestamp": "2023-11-24 09:03:00",
+                "end_timestamp": "2023-11-24 09:03:30",
+                "model": "none"
+            },
+            {
+                "role": "interviewer",
+                "message": "Great approach! Can you share how you handled any team disagreements during this period?",
+                "tokens": 16,
+                "start_timestamp": "2023-11-24 09:04:00",
+                "end_timestamp": "2023-11-24 09:04:10",
+                "model": "none"
+            },
+            {
+                "role": "candidate",
+                "message": "Sure. I prioritized open communication and regular feedback sessions. This helped in addressing disagreements early and finding mutually agreeable solutions.",
+                "tokens": 23,
+                "start_timestamp": "2023-11-24 09:05:00",
+                "end_timestamp": "2023-11-24 09:05:30",
+                "model": "none"
             }
         ]
     },
