@@ -46,8 +46,8 @@ def setup_env_variables():
 
 def setup_db_connection():
     """Connect to MongoDB (it will create a new database if it doesn"t exist)"""
-    LOGGER.info(f"Connecting to MongoDB with configuration: {get_db_host()}:27017")
-    connect(get_db_name(), host=get_db_host(), port=27017)
+    LOGGER.info(f"Connecting to MongoDB with configuration: [{get_db_host()}]")
+    connect(get_db_name(), host=get_db_host())
 
 
 def setup_openai():
