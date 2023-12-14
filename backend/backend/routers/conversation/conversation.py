@@ -17,7 +17,6 @@ ROUTER_PREFIX = "/interview"
 WEBSOCKET_PREFIX = "/response"
 TEMPLATE_NAME = "conversation.html"
 AUDIO_FILES_DIRECTORY = get_root_package_path()
-CURRENT_CONVERSATION_ID = interviews.get_last_generated_interview_session().id
 
 router = APIRouter(
     prefix="/interview",
