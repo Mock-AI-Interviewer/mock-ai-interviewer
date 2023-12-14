@@ -4,6 +4,7 @@ const PATHS = {
     INTERVIEW: '/interview',
     CONVERSATION: '/conversation',
     RESULTS: '/results',
+    ADMIN: '/admin',
 };
 
 export default PATHS;
