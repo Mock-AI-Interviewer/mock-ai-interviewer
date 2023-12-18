@@ -1,7 +1,9 @@
 import logging
-from typing import List
+from typing import Optional, List
 
 from fastapi import APIRouter, HTTPException, Path
+from pydantic import BaseModel
+from uuid import UUID, uuid4
 
 from backend.converters import interviews as model_converter
 from backend.db.dao import interviews as interviews_dao
@@ -16,6 +18,11 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+class Item(BaseModel):
+    id: Optional[UUID] = None
+    name: str
+
+items = {}
 
 @router.post("/initialise")
 async def initialise_interview(

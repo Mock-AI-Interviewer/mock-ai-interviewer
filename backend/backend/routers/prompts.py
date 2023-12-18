@@ -1,6 +1,6 @@
 import logging
 from typing import Optional, List
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Path
 from pydantic import BaseModel
 from uuid import UUID, uuid4
 
@@ -21,11 +21,26 @@ class Item(BaseModel):
 
 items = {}
 
-@router.post("/items/", response_model=Item)
-async def create_item(item: Item):
-    item.id = uuid4()
-    items[item.id] = item
-    return item
+@router.post("/items/update-prompt/competency/{new_prompt}")
+async def update_competency_interview_type_init_prompt(new_prompt: str = Path(...)) -> models.InterviewTypeRead:
+    try:
+        return service.update_interview_type_init_prompt("Competency", new_prompt)
+    except models.NotFoundError as e:
+        raise HTTPException(status_code=404, detail="Interview type not found")
+
+@router.post("/items/update-prompt/product-sense/{new_prompt}")
+async def update_product_sense_interview_type_init_prompt(new_prompt: str = Path(...)) -> models.InterviewTypeRead:
+    try:
+        return service.update_interview_type_init_prompt("Product Sense", new_prompt)
+    except models.NotFoundError as e:
+        raise HTTPException(status_code=404, detail="Interview type not found")
+
+@router.post("/items/update-prompt/coding/{new_prompt}")
+async def update_coding_interview_type_init_prompt(new_prompt: str = Path(...)) -> models.InterviewTypeRead:
+    try:
+        return service.update_interview_type_init_prompt("Coding", new_prompt)
+    except models.NotFoundError as e:
+        raise HTTPException(status_code=404, detail="Interview type not found")
 
 @router.get("/items/{item_id}", response_model=Item)
 async def read_item(item_id: UUID):
@@ -34,7 +49,7 @@ async def read_item(item_id: UUID):
     raise HTTPException(status_code=404, detail="Item not found")
 
 @router.get("/items", response_model=List[models.InterviewTypeSummary])
-async def readall_item():
+async def read_all_items():
     return service.list_all_interview_type_summaries()
 
 @router.put("/items/{item_id}", response_model=Item)

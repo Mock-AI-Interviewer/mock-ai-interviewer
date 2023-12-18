@@ -228,3 +228,14 @@ def list_all_interview_type_summaries() -> List[models.InterviewTypeSummary]:
         for interview_type in all_interview_types
     ]
     return summaries
+
+def update_interview_type_init_prompt(name: str, new_prompt: str) -> models.InterviewTypeRead:
+    # Assuming you have a function in dao to get an interview type by id
+    interview_type = dao.get_interview_type(name)
+    if not interview_type:
+        return False
+
+    interview_type.init_prompt = new_prompt
+
+    # Assuming you have a function in dao to update an interview type
+    return dao.update_interview_type(interview_type)

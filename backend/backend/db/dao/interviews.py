@@ -72,3 +72,8 @@ def delete_last_message_from_interview_session(interview_id: str) -> InterviewSe
     interview_session.conversation_history.pop()
     interview_session.save()
     return interview_session
+
+def update_interview_type(interview_session: InterviewSessionDocument) -> InterviewSessionDocument:
+    # interview_session = get_interview_session(interview_id)
+    interview_session.save()
+    return interview_session
