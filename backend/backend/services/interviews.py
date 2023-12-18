@@ -219,3 +219,12 @@ def list_all_interview_types() -> List[models.InterviewTypeRead]:
         )
         ret.append(interview_type_read)
     return ret
+
+def list_all_interview_type_summaries() -> List[models.InterviewTypeSummary]:
+    """List names and initial prompts of all interview types"""
+    all_interview_types = dao.list_all_interview_types()
+    summaries = [
+        models.InterviewTypeSummary(name=interview_type.name, init_prompt=interview_type.init_prompt)
+        for interview_type in all_interview_types
+    ]
+    return summaries

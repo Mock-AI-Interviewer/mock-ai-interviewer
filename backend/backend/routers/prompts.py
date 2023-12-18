@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, List
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from uuid import UUID, uuid4
@@ -32,6 +32,10 @@ async def read_item(item_id: UUID):
     if item_id in items:
         return items[item_id]
     raise HTTPException(status_code=404, detail="Item not found")
+
+@router.get("/items", response_model=List[models.InterviewTypeSummary])
+async def readall_item():
+    return service.list_all_interview_type_summaries()
 
 @router.put("/items/{item_id}", response_model=Item)
 async def update_item(item_id: UUID, item: Item):
