@@ -22,7 +22,7 @@ def list_all_interview_types() -> List[InterviewTypeDocument]:
     return list(InterviewTypeDocument.objects.all())
 
 
-def get_interview_type(name: str) -> Optional[InterviewTypeDocument]:
+def get_interview_type(name: str) -> InterviewTypeDocument:
     """
     Get an interview type by name (case insensitive).
     Returns the first interview type with the given name, or raises a 404 error if no interview type is found.
@@ -70,10 +70,5 @@ def get_last_generated_interview_session() -> Optional[InterviewSessionDocument]
 def delete_last_message_from_interview_session(interview_id: str) -> InterviewSessionDocument:
     interview_session = get_interview_session(interview_id)
     interview_session.conversation_history.pop()
-    interview_session.save()
-    return interview_session
-
-def update_interview_type(interview_session: InterviewSessionDocument) -> InterviewSessionDocument:
-    # interview_session = get_interview_session(interview_id)
     interview_session.save()
     return interview_session

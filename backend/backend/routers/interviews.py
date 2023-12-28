@@ -18,11 +18,6 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-class Item(BaseModel):
-    id: Optional[UUID] = None
-    name: str
-
-items = {}
 
 @router.post("/initialise")
 async def initialise_interview(

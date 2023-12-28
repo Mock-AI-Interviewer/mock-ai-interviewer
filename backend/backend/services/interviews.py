@@ -220,22 +220,9 @@ def list_all_interview_types() -> List[models.InterviewTypeRead]:
         ret.append(interview_type_read)
     return ret
 
-def list_all_interview_type_summaries() -> List[models.InterviewTypeSummary]:
-    """List names and initial prompts of all interview types"""
-    all_interview_types = dao.list_all_interview_types()
-    summaries = [
-        models.InterviewTypeSummary(name=interview_type.name, init_prompt=interview_type.init_prompt)
-        for interview_type in all_interview_types
-    ]
-    return summaries
-
 def update_interview_type_init_prompt(name: str, new_prompt: str) -> models.InterviewTypeRead:
-    # Assuming you have a function in dao to get an interview type by id
     interview_type = dao.get_interview_type(name)
-    if not interview_type:
-        return False
 
     interview_type.init_prompt = new_prompt
-
-    # Assuming you have a function in dao to update an interview type
-    return dao.update_interview_type(interview_type)
+    interview_type.save()
+    return interview_type

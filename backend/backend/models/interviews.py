@@ -31,13 +31,6 @@ class InterviewTypeBase(BaseModel):
     init_prompt: str
     image: str
 
-class InterviewTypeSummary(BaseModel):
-    name: str
-    init_prompt: str
-
-class UpdateInitPromptRequest(BaseModel):
-    init_prompt: str
-    
 class InterviewTypeRead(InterviewTypeBase):
     pass
 
