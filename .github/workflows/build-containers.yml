@@ -1,6 +1,6 @@
 name: Build Containers
 run-name: ${{ github.actor }} is building Docker Containers 🚀
-on: [push]
+on: push
 jobs:
   build-containers:
     environment: test
