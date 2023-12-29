@@ -2,11 +2,17 @@ name: Build Containers
 run-name: ${{ github.actor }} is building Docker Containers 🚀
 on: [push]
 jobs:
-  Explore-GitHub-Actions:
+  build-containers:
+    environment: test
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
+      - name: Convert all Secrets to Env Variables
+        uses: oNaiPs/secrets-to-env-action@v1
+        with:
+          secrets: ${{ toJSON(secrets) }}
+      - run: echo "Value of FRONTEND_USERNAME $(FRONTEND_USERNAME)"
       - name: Building Docker Compose Containers
         run: docker-compose -f docker-compose.local.yml build
       - run: echo "🍏 This job's status is ${{ job.status }}."
