@@ -31,6 +31,8 @@ class InterviewTypeBase(BaseModel):
     init_prompt: str
     image: str
 
+class UpdateInitPromptRequest(BaseModel):
+    init_prompt: str
 class InterviewTypeRead(InterviewTypeBase):
     pass
 

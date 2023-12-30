@@ -1,8 +1,5 @@
 import logging
-from typing import Optional, List
-from fastapi import APIRouter, HTTPException, Path
-from pydantic import BaseModel
-from uuid import UUID, uuid4
+from fastapi import APIRouter, HTTPException, Path, Body
 
 from backend.models import interviews as models
 from backend.services import interviews as service
@@ -15,9 +12,9 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-@router.put("/{interview_type}/{new_prompt}")
-async def update_interview_type_init_prompt(interview_type: str = Path(...),new_prompt: str = Path(...)) -> models.InterviewTypeRead:
+@router.put("/{interview_type}")
+async def update_interview_type_init_prompt(interview_type: str = Path(...), payload: models.UpdateInitPromptRequest = Body(...)) -> models.InterviewTypeRead:
     try:
-        return service.update_interview_type_init_prompt(interview_type, new_prompt)
+        return service.update_interview_type_init_prompt(interview_type, payload.init_prompt)
     except models.NotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
