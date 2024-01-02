@@ -13,8 +13,8 @@ router = APIRouter(
 )
 
 @router.put("/{interview_type}")
-async def update_interview_type_init_prompt(interview_type: str = Path(...), payload: models.UpdateInitPromptRequest = Body(...)) -> models.InterviewTypeRead:
+async def update_interview_type_init_prompt(interview_type: str = Path(...), new_prompt:str = Body(...)) -> models.InterviewTypeRead:
     try:
-        return service.update_interview_type_init_prompt(interview_type, payload.init_prompt)
+        return service.update_interview_type_init_prompt(interview_type, new_prompt)
     except models.NotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
