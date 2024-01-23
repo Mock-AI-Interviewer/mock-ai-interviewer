@@ -3,8 +3,6 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException, Path
 
-from backend.converters import interviews as model_converter
-from backend.db.dao import interviews as interviews_dao
 from backend.models import interviews as models
 from backend.services import interviews as service
 
