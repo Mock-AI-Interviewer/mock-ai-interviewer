@@ -22,16 +22,25 @@ jobs:
         run: |
           aws sts get-caller-identity
 
-      - name: Output all secrets and vars
+        # Install Python 3.9
+      - name: Install Python 3.9
+        uses: actions/setup-python@v2
+        with:
+            python-version: 3.9
+      
+      # Install the EB CLI using pip
+      - name: Install EB CLI
         run: |
-          echo "$ALLMYSECRETS"
-          echo "$ALLMYVARS"
-        env:
-          ALLMYSECRETS: ${{ toJSON(secrets) }}
-          ALLMYVARS: ${{ toJSON(vars) }}
+          python -m pip install --upgrade pip
+          pip install awsebcli
+      
+      # Deploy to EB
+      - name: Check eb health
+        run: |
+          eb health
         
 
-      - name: EB CLI testing
-        uses: hmanzur/actions-aws-eb@v1.0.0
-        with:
-          command: 'health'
+      # - name: EB CLI testing
+      #   uses: hmanzur/actions-aws-eb@v1.0.0
+      #   with:
+      #     command: 'health'
