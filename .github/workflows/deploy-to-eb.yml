@@ -1,5 +1,5 @@
-name: Test EB CLI
-run-name: ${{ github.actor }} is testing EB CLI 🧪
+name: Deploying to Elastic Beanstalk
+run-name: ${{ github.actor }} is deploying to Elatic Beanstalk 💫
 on: push
 jobs:
   deploy:
@@ -12,7 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       
-      - name: Configure AWS credentials from Test account
+      - name: Configure AWS credentials with Deployment Role
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::306210296691:role/GitHubActionsDeploymentRole
@@ -31,13 +31,13 @@ jobs:
           pip install awsebcli
       
       # Deploy to EB
-      - name: Init EB CLI
+      - name: Initialise EB CLI
         run: |
           eb init "Mock AI Interviewer" \
           --region eu-west-2 \
           --platform "Docker running on 64bit Amazon Linux 2023"
         
 
-      - name: EB CLI testing
+      - name: Deploying to EB
         run: |
-          eb health  
+          eb deploy  
