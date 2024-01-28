@@ -2,9 +2,6 @@ name: Deploying to Elastic Beanstalk
 run-name: ${{ github.actor }} is deploying to Elatic Beanstalk 💫
 on:
   workflow_dispatch:
-    branches:
-      - develop
-      - main
 jobs:
   deploy-to-eb:
     runs-on: ubuntu-latest
