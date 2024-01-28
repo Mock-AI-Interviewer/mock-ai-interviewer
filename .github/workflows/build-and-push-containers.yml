@@ -28,7 +28,7 @@ jobs:
         continue-on-error: true
 
       - name: Building Docker Compose Containers
-        run: docker-compose -f docker-compose.local.yml build
+        run: docker-compose -f docker-compose.local.yml build backend
 
       - name: Configure AWS credentials from Test account
         uses: aws-actions/configure-aws-credentials@v4
