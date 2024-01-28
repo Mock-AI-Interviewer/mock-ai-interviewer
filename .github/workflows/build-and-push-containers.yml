@@ -3,8 +3,12 @@ run-name: ${{ github.actor }} is building and pushing Docker Containers 🚀
 on:
   push:
     branches:
-      - "develop"
-      - "main"
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
   workflow_dispatch:
 jobs:
   build-and-push:
