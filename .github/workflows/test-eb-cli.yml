@@ -35,12 +35,11 @@ jobs:
           pip install awsebcli
       
       # Deploy to EB
-      - name: Check eb health
+      - name: Init EB CLI
         run: |
-          eb health
+          eb init "Mock AI Interviewer" -r eu-west-2
         
 
-      # - name: EB CLI testing
-      #   uses: hmanzur/actions-aws-eb@v1.0.0
-      #   with:
-      #     command: 'health'
+      - name: EB CLI testing
+        run: |
+          eb health  
