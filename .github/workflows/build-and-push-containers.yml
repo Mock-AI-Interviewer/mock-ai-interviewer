@@ -1,6 +1,11 @@
 name: Build and Push Containers
 run-name: ${{ github.actor }} is building and pushing Docker Containers 🚀
-on: workflow_dispatch
+on:
+  push:
+    branches:
+      - "develop"
+      - "main"
+  workflow_dispatch:
 jobs:
   build-and-push:
     environment: test
