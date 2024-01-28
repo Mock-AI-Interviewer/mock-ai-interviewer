@@ -1,6 +1,6 @@
 name: Build and Push Containers
 run-name: ${{ github.actor }} is building and pushing Docker Containers 🚀
-on: workflow_dispatch
+on: push
 jobs:
   build-and-push:
     environment: test
@@ -15,15 +15,26 @@ jobs:
       - run: echo "Value of FRONTEND_USERNAME $(FRONTEND_USERNAME)"
       - name: Building Docker Compose Containers
         run: docker-compose -f docker-compose.local.yml build
+      - name: Configure AWS credentials from Test account
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::306210296691:role/GitHubActionsECRPushPull
+          aws-region: us-east-1
       - name: Login to AWS ECR
+        id: login-ecr-public
         uses: aws-actions/amazon-ecr-login@v1
+        with:
+          registry-type: public
       - name: Push Backend Container
+        env:
+          REPOSITORY: mock-ai-interviewer-backend
         run: |
-          docker tag mock-ai-interviewer-backend:latest public.ecr.aws/h2s4i0x5/mock-ai-interviewer-backend
-          docker push public.ecr.aws/h2s4i0x5/mock-ai-interviewer-backend
+          docker tag $REPOSITORY:latest ${{ steps.login-ecr-public.outputs.registry }}/$REPOSITORY
+          docker push ${{ steps.login-ecr-public.outputs.registry }}/$REPOSITORY
       - name: Push Frontend Container
+        env:
+          REPOSITORY: mock-ai-interviewer-frontend
         run: |
-          docker tag mock-ai-interviewer-frontend:latest public.ecr.aws/h2s4i0x5/mock-ai-interviewer-frontend
-          docker push public.ecr.aws/h2s4i0x5/mock-ai-interviewer-frontend
+          docker tag $REPOSITORY:latest ${{ steps.login-ecr-public.outputs.registry }}/$REPOSITORY
+          docker push ${{ steps.login-ecr-public.outputs.registry }}/$REPOSITORY
       - run: echo "🍏 Build and Push job's status is ${{ job.status }}."
-

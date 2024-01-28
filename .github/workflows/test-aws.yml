@@ -1,6 +1,6 @@
 name: Test AWS Connection
 run-name: ${{ github.actor }} is testing AWS Connection 🧪
-on: push
+on: []
 jobs:
   deploy:
     name: Testing AWS Connection
