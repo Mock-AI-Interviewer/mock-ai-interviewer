@@ -2,6 +2,7 @@ version: '3.7'
 
 services:
   frontend:
+    image: mock-ai-interviewer-frontend
     build:
       context: ./frontend
       args:
@@ -13,6 +14,7 @@ services:
       - backend
 
   backend:
+    image: mock-ai-interviewer-backend
     build: ./backend
     ports:
       - "8000:8000"
