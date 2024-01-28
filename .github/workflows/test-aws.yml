@@ -2,14 +2,14 @@ name: Test AWS Connection
 run-name: ${{ github.actor }} is testing AWS Connection 🧪
 on: push
 jobs:
-    deploy:
-      name: Testing AWS Connection
-      runs-on: ubuntu-latest
-      # These permissions are needed to interact with GitHub's OIDC Token endpoint.
-      permissions:
-        id-token: write
-        contents: read
-      steps:
+  deploy:
+    name: Testing AWS Connection
+    runs-on: ubuntu-latest
+    # These permissions are needed to interact with GitHub's OIDC Token endpoint.
+    permissions:
+      id-token: write
+      contents: read
+    steps:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Configure AWS credentials from Test account
@@ -17,4 +17,9 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::306210296691:role/GitHubActionsDeploymentRole
           aws-region: eu-west-2
-      
+      - name: Test AWS Connection
+        run: |
+          aws sts get-caller-identity
+      - name: List repositories
+        run: |
+          aws ecr-public describe-repositories
