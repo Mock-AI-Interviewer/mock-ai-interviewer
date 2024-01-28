@@ -22,6 +22,15 @@ jobs:
         run: |
           aws sts get-caller-identity
 
+      - name: Output all secrets and vars
+        run: |
+          echo "$ALLMYSECRETS"
+          echo "$ALLMYVARS"
+        env:
+          ALLMYSECRETS: ${{ toJSON(secrets) }}
+          ALLMYVARS: ${{ toJSON(vars) }}
+        
+
       - name: EB CLI testing
         uses: hmanzur/actions-aws-eb@v1.0.0
         with:
