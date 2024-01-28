@@ -1,0 +1,29 @@
+# name: Build and Push Containers
+# run-name: ${{ github.actor }} is building and pushing Docker Containers 🚀
+# on: push
+# jobs:
+#   build-and-push:
+#     environment: test
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Check out repository code
+#         uses: actions/checkout@v4
+#       - name: Convert all Secrets to Env Variables
+#         uses: oNaiPs/secrets-to-env-action@v1
+#         with:
+#           secrets: ${{ toJSON(secrets) }}
+#       - run: echo "Value of FRONTEND_USERNAME $(FRONTEND_USERNAME)"
+#       - name: Building Docker Compose Containers
+#         run: docker-compose -f docker-compose.local.yml build
+#       - name: Login to AWS ECR
+#         uses: aws-actions/amazon-ecr-login@v1
+#       - name: Push Backend Container
+#         run: |
+#           docker tag mock-ai-interviewer-backend:latest public.ecr.aws/h2s4i0x5/mock-ai-interviewer-backend
+#           docker push public.ecr.aws/h2s4i0x5/mock-ai-interviewer-backend
+#       - name: Push Frontend Container
+#         run: |
+#           docker tag mock-ai-interviewer-frontend:latest public.ecr.aws/h2s4i0x5/mock-ai-interviewer-frontend
+#           docker push public.ecr.aws/h2s4i0x5/mock-ai-interviewer-frontend
+#       - run: echo "🍏 Build and Push job's status is ${{ job.status }}."
+
