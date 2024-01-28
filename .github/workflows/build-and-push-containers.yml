@@ -48,15 +48,18 @@ jobs:
 
       - name: Push Backend Container
         env:
+          REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
           REPOSITORY: mock-ai-interviewer-backend
         run: |
-          docker tag $REPOSITORY:latest ${{ steps.login-ecr-public.outputs.registry }}/$REPOSITORY
-          docker push ${{ steps.login-ecr-public.outputs.registry }}/$REPOSITORY
+          docker tag $REPOSITORY:latest $REGISTRY/$REPOSITORY:latest
+          docker push $REGISTRY/$REPOSITORY:latest
 
       - name: Push Frontend Container
         env:
+          REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
           REPOSITORY: mock-ai-interviewer-frontend
         run: |
-          docker tag $REPOSITORY:latest ${{ steps.login-ecr-public.outputs.registry }}/$REPOSITORY
-          docker push ${{ steps.login-ecr-public.outputs.registry }}/$REPOSITORY
+          docker tag $REPOSITORY:latest $REGISTRY/$REPOSITORY
+          docker push $REGISTRY/$REPOSITORY:latest
+        
       - run: echo "🍏 Build and Push job's status is ${{ job.status }}."
