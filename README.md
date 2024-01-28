@@ -22,7 +22,7 @@
 - Also create a `.env` file in the `./backend` with the content as shown in the .env.example file:
 - Fill in missing values with appropriate values
 
-### Running the project
+### Running the project Locally
 
 - To run the project a combination of different scripts are used
 - Scripts that reference docker compose files are run from the root directory
@@ -39,6 +39,22 @@
   - Run `./run-local.sh` and stand up all services
   - This utilises the local docker-compose file (`docker-compose.local.yml`)
   
-- Run project via current hosted containers:
+- Run project via the latest hosted containers on ECR (see section below for more details):
   - RUn `./run-test.sh` and stand up all services
   - This utilises the test docker-compose file (`docker-compose.yml`)
+
+### Building Container Images & Pushing to Elastic Container Registry (ECR)
+
+- To do this run the `Build and Push Containers` github action.
+- To find out how to trigger this action look at the `on:` section of the `build-and-push-containers.yml` file in the .github/workflows directory
+- It should tell you the triggers for the build to be run. ie if it has the `push` trigger, then pushing the branch will trigger the build
+- If it has the `workflow_event` trigger, then you can trigger the build manually by going to the actions tab on github and running from there. See [here](https://docs.github.com/en/actions/using-workflows/manually-running-a-workflow?tool=webui#running-a-workflow)
+
+## Running on AWS via Elastic Beanstalk (EB)
+
+### Deploying to Elastic Beanstalk (EB)
+
+- To do this run the `Deploy to Elastic Beanstalk` github action
+- To find out how to trigger this action look at the `on:` section of the `build-and-push-containers.yml` file in the .github/workflows directory
+- It should tell you the triggers for the build to be run. ie if it has the `push` trigger, then pushing the branch will trigger the build
+- If it has the `workflow_event` trigger, then you can trigger the build manually by going to the actions tab on github and running from there. See [here](https://docs.github.com/en/actions/using-workflows/manually-running-a-workflow?tool=webui#running-a-workflow)

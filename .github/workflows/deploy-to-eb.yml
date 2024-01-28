@@ -1,4 +1,4 @@
-name: Deploying to Elastic Beanstalk
+name: Deploy to Elastic Beanstalk
 run-name: ${{ github.actor }} is deploying to Elatic Beanstalk 💫
 on:
   workflow_dispatch:
