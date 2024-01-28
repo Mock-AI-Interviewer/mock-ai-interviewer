@@ -33,7 +33,9 @@ jobs:
       # Deploy to EB
       - name: Init EB CLI
         run: |
-          eb init "Mock AI Interviewer" -r eu-west-2
+          eb init "Mock AI Interviewer" \
+          --region eu-west-2 \
+          --platform "Docker running on 64bit Amazon Linux 2023"
         
 
       - name: EB CLI testing
