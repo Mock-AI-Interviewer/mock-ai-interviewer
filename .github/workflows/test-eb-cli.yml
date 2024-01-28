@@ -1,0 +1,28 @@
+name: Test EB CLI
+run-name: ${{ github.actor }} is testing EB CLI 🧪
+on: push
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # These permissions are needed to interact with GitHub's OIDC Token endpoint.
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+      - name: Configure AWS credentials from Test account
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::306210296691:role/GitHubActionsECRPushPull
+          aws-region: us-east-1
+
+      - name: Test AWS Connection
+        run: |
+          aws sts get-caller-identity
+
+      - name: EB CLI testing
+        uses: hmanzur/actions-aws-eb@v1.0.0
+        with:
+          command: 'health'

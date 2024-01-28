@@ -1,6 +1,6 @@
 name: Build and Push Containers
 run-name: ${{ github.actor }} is building and pushing Docker Containers 🚀
-on: push
+on: workflow_dispatch
 jobs:
   build-and-push:
     environment: test
@@ -28,7 +28,7 @@ jobs:
         continue-on-error: true
 
       - name: Building Docker Compose Containers
-        run: docker-compose -f docker-compose.local.yml build backend
+        run: docker-compose -f docker-compose.local.yml build
 
       - name: Configure AWS credentials from Test account
         uses: aws-actions/configure-aws-credentials@v4
