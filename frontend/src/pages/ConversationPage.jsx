@@ -21,6 +21,10 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
     const [isInterviewStarted, setIsInterviewStarted] = useState(false);
     const sendIntervalRef = useRef(null);
     const webSocketRef = useRef(null); // Ref to store the WebSocket instance
+    const analyserRef = useRef(null);
+    const audioContextRef = useRef(null); // Ref to store the audioContextRef
+    const canvasRef = useRef(null);
+    const animationFrameIdRef = useRef(null);
     const WEB_SOCKET_ENDPOINT = `${config.backendApiWebsocketUrl}/interview/${interviewId}/response`
     const WEB_SOCKET_FULL_URL = `${WEB_SOCKET_ENDPOINT}?user_id=${user_id}&enable_audio_input=${enableAudioInput}&enable_audio_output=${enableAudioOutput}`;
     const START_INTERVIEW_ENDPOINT = `${config.backendApiUrl}/interview/session/${interviewId}/start`
@@ -175,18 +179,31 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
             console.error("Recorder.js is not loaded yet.");
             return;
         }
+        
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                const audioContext = new AudioContext();
-                const source = audioContext.createMediaStreamSource(stream);
+                if (!audioContextRef.current) {
+                    audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+                }
+
+                if (!analyserRef.current) {
+                    analyserRef.current = audioContextRef.current.createAnalyser();
+                    analyserRef.current.fftSize = 2048;
+                    // analyserRef.current.connect(audioContextRef.current.destination);
+                }
+
+                const source = audioContextRef.current.createMediaStreamSource(stream);
+                source.connect(analyserRef.current);
 
                 recorderRef.current = new window.Recorder(source, { numChannels: 1 });
                 recorderRef.current.record();
+                requestAnimationFrame(drawAudioWaveform);
                 setRecording(true);
 
                 // Set up an interval to send audio chunks
                 sendIntervalRef.current = setInterval(sendAudioChunk, 1000); // Adjust interval as needed
+                // source.connect(sendIntervalRef.current);
+
             })
             .catch(error => {
                 console.error('Error accessing microphone:', error);
@@ -205,8 +222,17 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
                 console.log('Sent text');
             }, 1000); // Wait for 1 second before sending the message
 
+            cancelAnimationFrame(animationFrameIdRef.current);
+            clearCanvas();
+            
             setRecording(false);
         }
+    }
+
+    function clearCanvas() {
+        const canvas = canvasRef.current;
+        const canvasCtx = canvas.getContext('2d');
+        canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
     const receiveText = (data) => {
@@ -368,6 +394,45 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
         context.stroke();
     }
 
+    function drawAudioWaveform() {
+        animationFrameIdRef.current = requestAnimationFrame(drawAudioWaveform);
+        
+        const canvas = canvasRef.current;
+        const canvasCtx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+    
+        canvasCtx.fillStyle = 'rgba(255, 255, 255, 0.5)'; // Background color
+        canvasCtx.fillRect(0, 0, width, height);
+    
+        canvasCtx.lineWidth = 2;
+        canvasCtx.strokeStyle = 'rgb(0, 0, 0)'; // Waveform color
+        canvasCtx.beginPath();
+    
+        const bufferLength = analyserRef.current.fftSize;
+        const dataArray = new Uint8Array(bufferLength);
+        analyserRef.current.getByteTimeDomainData(dataArray);
+    
+        const sliceWidth = width * 1.0 / bufferLength;
+        let x = 0;
+    
+        for (let i = 0; i < bufferLength; i++) {
+            const v = dataArray[i] / 128.0; // Normalize byte value to [0, 1]
+            const y = v * height / 2;
+    
+            if (i === 0) {
+                canvasCtx.moveTo(x, y);
+            } else {
+                canvasCtx.lineTo(x, y);
+            }
+    
+            x += sliceWidth;
+        }
+    
+        canvasCtx.lineTo(width, height / 2);
+        canvasCtx.stroke();
+    }
+
 
     return (
         <>
@@ -377,6 +442,7 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
                 <Typography variant="subtitle1">{interviewType.description}</Typography>
                 <Divider sx={{ mt: 2, mb: 2 }} />
                 <canvas id="visualizer" width="800px" height="200px"></canvas>
+                <canvas ref={canvasRef} id="visualizer2" width="800" height="200"></canvas>
 
                 {/* <div>
                     <Typography variant="h6">Transcript:</Typography>
