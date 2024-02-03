@@ -9,10 +9,7 @@ import logging
 import os
 
 from backend.conf import get_root_package_path, initialise_app
-from backend.db.models.interviews import (
-    InterviewSessionDocument,
-    InterviewTypeDocument,
-)
+from backend.db.models.interviews import InterviewSessionDocument, InterviewTypeDocument
 
 initialise_app()
 LOGGER = logging.getLogger(__name__)
@@ -44,9 +41,11 @@ def insert_example_interview_types():
         session.save()  # The collection is created here if it doesn"t exist
         LOGGER.info(f"Inserted example interview type with id {session.id}")
 
-def initialise_db():
+
+def insert_example_data():
     insert_example_interview_session()
     insert_example_interview_types()
 
+
 if __name__ == "__main__":
-    initialise_db
+    insert_example_data()
