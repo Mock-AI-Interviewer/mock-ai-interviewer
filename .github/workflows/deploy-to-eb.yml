@@ -1,0 +1,42 @@
+name: Deploy to Elastic Beanstalk
+run-name: ${{ github.actor }} is deploying to Elatic Beanstalk 💫
+on:
+  workflow_dispatch:
+jobs:
+  deploy-to-eb:
+    runs-on: ubuntu-latest
+    # These permissions are needed to interact with GitHub's OIDC Token endpoint.
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials with Deployment Role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::306210296691:role/GitHubActionsDeploymentRole
+          aws-region: us-east-1
+
+        # Install Python 3.9
+      - name: Install Python 3.9
+        uses: actions/setup-python@v5
+        with:
+            python-version: 3.9
+      
+
+      - name: Install EB CLI
+        run: |
+          python -m pip install --upgrade pip
+          pip install awsebcli
+
+      - name: Initialise EB CLI
+        run: |
+          eb init "Mock AI Interviewer" \
+          --region eu-west-2 \
+          --platform "Docker running on 64bit Amazon Linux 2023"
+        
+      - name: Deploying to EB
+        run: |
+          eb deploy  

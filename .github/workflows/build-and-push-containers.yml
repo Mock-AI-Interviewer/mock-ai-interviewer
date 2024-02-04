@@ -1,0 +1,73 @@
+name: Build and Push Containers
+run-name: ${{ github.actor }} is building and pushing Docker Containers 🚀
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+  workflow_dispatch:
+jobs:
+  build-and-push:
+    environment: test
+    runs-on: ubuntu-latest
+    # These permissions are needed to interact with GitHub's OIDC Token endpoint.
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Convert all Secrets to Env Variables
+        uses: oNaiPs/secrets-to-env-action@v1
+        with:
+          secrets: ${{ toJSON(secrets) }}
+      - run: echo "Value of FRONTEND_USERNAME $(FRONTEND_USERNAME)"
+
+      # In this step, this action saves a list of existing images,
+      # the cache is created without them in the post run.
+      # It also restores the cache if it exists.
+      - name: Enable Docker Layer Caching
+        uses: satackey/action-docker-layer-caching@v0.0.11
+        # Ignore the failure of a step and avoid terminating the job.
+        continue-on-error: true
+
+      - name: Building Docker Compose Containers
+        run: docker-compose -f docker-compose.local.yml build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::306210296691:role/GitHubActionsECRPushPull
+          aws-region: us-east-1
+
+      - name: Login to AWS ECR
+        id: login-ecr-public
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          registry-type: public
+          mask-password: 'true'
+
+      - name: Push Backend Container
+        env:
+          REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
+          REGISTRY_ALIAS: h2s4i0x5
+          REPOSITORY: mock-ai-interviewer-backend
+        run: |
+          docker tag $REPOSITORY:latest $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY
+          docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY
+
+      - name: Push Frontend Container
+        env:
+          REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
+          REGISTRY_ALIAS: h2s4i0x5
+          REPOSITORY: mock-ai-interviewer-frontend
+        run: |
+          docker tag $REPOSITORY:latest $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY
+          docker push $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY
+        
+      - run: echo "🍏 Build and Push job's status is ${{ job.status }}."

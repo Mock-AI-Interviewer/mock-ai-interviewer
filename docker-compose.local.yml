@@ -2,23 +2,42 @@ version: '3.7'
 
 services:
   frontend:
-    image: public.ecr.aws/h2s4i0x5/mock-ai-interviewer-frontend:latest
+    image: mock-ai-interviewer-frontend
+    build:
+      context: ./frontend
+      args:
+        FRONTEND_PASSWORD: ${FRONTEND_PASSWORD}
+        FRONTEND_USERNAME: ${FRONTEND_USERNAME}
     ports:
       - "80:80"
     depends_on:
       - backend
 
   backend:
-    image: public.ecr.aws/h2s4i0x5/mock-ai-interviewer-backend:latest
+    image: mock-ai-interviewer-backend
+    build: ./backend
     ports:
       - "8000:8000"
+    depends_on:
+      - mongo
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       OPENAI_ORGANIZATION: ${OPENAI_ORGANIZATION}
       OPENAI_MODEL: ${OPENAI_MODEL}
       LLM_REVIEW_PROMPT: ${LLM_REVIEW_PROMPT}
       DB_NAME: ${DB_NAME}
-      DB_HOST: ${DB_HOST}
+      DB_HOST: mongo
       ELEVEN_LABS_API_KEY: ${ELEVEN_LABS_API_KEY}
       GOOGLE_SA_PRIVATE_KEY: ${GOOGLE_SA_PRIVATE_KEY}
       GOOGLE_SA_PRIVATE_KEY_ID: ${GOOGLE_SA_PRIVATE_KEY_ID}
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo-db-container
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

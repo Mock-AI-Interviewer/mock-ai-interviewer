@@ -219,3 +219,10 @@ def list_all_interview_types() -> List[models.InterviewTypeRead]:
         )
         ret.append(interview_type_read)
     return ret
+
+def update_interview_type_init_prompt(name: str, new_prompt: str) -> models.InterviewTypeRead:
+    interview_type = dao.get_interview_type(name)
+
+    interview_type.init_prompt = new_prompt
+    interview_type.save()
+    return interview_type

@@ -16,31 +16,45 @@
 - Install Docker and Docker Compose (you can just install Docker Desktop for Windows or Mac)
 - If you want to explore the mongo database, install MongoDB Compass
 
-### Steps
+### Setting up Environment
 
-- Create .env file in repository root with the following content:
+- Create `.env` file in `./frontend` with the content as shown in the .env.example file:
+- Also create a `.env` file in the `./backend` with the content as shown in the .env.example file:
+- Fill in missing values with appropriate values
 
-```env
-PASSWORD=ANY_PASSWORD
-```
+### Running the project Locally
 
-- This is to allow the frontend to be password protected
+- To run the project a combination of different scripts are used
+- Scripts that reference docker compose files are run from the root directory
+- Other helper scripts can be found in the `./scripts` directory
+- Currently there are 3 progressive ways to run the project
 
-- Also create a .env file in the `./backend` with the following content:
+- To run with hot reloading:
+  - Doing it this way will allow you to make changes to the code and see the changes reflected in the browser
+  - Run `./run-local.sh` and stand up the mongo service
+  - Go into the `./backend` directory and run uvicorn with the following command: `uvicorn main:app --reload`
+  - Go into the `./frontend` directory and run the following command: `npm start`
 
-```env
-OPENAI_API_KEY="<FILL-ME-IN>"
-OPENAI_ORGANIZATION="<FILL-ME-IN>"
-OPENAI_MODEL="gpt-3.5-turbo"
+- Run project via building containers Locally:
+  - Run `./run-local.sh` and stand up all services
+  - This utilises the local docker-compose file (`docker-compose.local.yml`)
+  
+- Run project via the latest hosted containers on ECR (see section below for more details):
+  - RUn `./run-test.sh` and stand up all services
+  - This utilises the test docker-compose file (`docker-compose.yml`)
 
-DB_NAME="interview_db"
-ELEVEN_LABS_API_KEY="<FILL-ME-IN>"
+### Building Container Images & Pushing to Elastic Container Registry (ECR)
 
-GOOGLE_SA_PRIVATE_KEY="<FILL-ME-IN>"
-GOOGLE_SA_PRIVATE_KEY_ID="<FILL-ME-IN>"
-```
+- To do this run the `Build and Push Containers` github action.
+- To find out how to trigger this action look at the `on:` section of the `build-and-push-containers.yml` file in the .github/workflows directory
+- It should tell you the triggers for the build to be run. ie if it has the `push` trigger, then pushing the branch will trigger the build
+- If it has the `workflow_event` trigger, then you can trigger the build manually by going to the actions tab on github and running from there. See [here](https://docs.github.com/en/actions/using-workflows/manually-running-a-workflow?tool=webui#running-a-workflow)
 
-- Fill in the areas which say `<FILL-ME-IN>` with the appropriate values
+## Running on AWS via Elastic Beanstalk (EB)
 
-- Run `docker-compose up --build` in repository root
-- Open <http://localhost:3000> in your browser
+### Deploying to Elastic Beanstalk (EB)
+
+- To do this run the `Deploy to Elastic Beanstalk` github action
+- To find out how to trigger this action look at the `on:` section of the `build-and-push-containers.yml` file in the .github/workflows directory
+- It should tell you the triggers for the build to be run. ie if it has the `push` trigger, then pushing the branch will trigger the build
+- If it has the `workflow_event` trigger, then you can trigger the build manually by going to the actions tab on github and running from there. See [here](https://docs.github.com/en/actions/using-workflows/manually-running-a-workflow?tool=webui#running-a-workflow)
