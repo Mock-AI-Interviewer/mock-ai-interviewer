@@ -20,9 +20,9 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
     const [isRecorderLoaded, setIsRecorderLoaded] = useState(false);
     const [isInterviewStarted, setIsInterviewStarted] = useState(false);
     const sendIntervalRef = useRef(null);
-    const webSocketRef = useRef(null); // Ref to store the WebSocket instance
+    const webSocketRef = useRef(null);
     const analyserRef = useRef(null);
-    const audioContextRef = useRef(null); // Ref to store the audioContextRef
+    const audioContextRef = useRef(null);
     const canvasRef = useRef(null);
     const animationFrameIdRef = useRef(null);
     const WEB_SOCKET_ENDPOINT = `${config.backendApiWebsocketUrl}/interview/${interviewId}/response`
@@ -43,9 +43,6 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
     let bufferThreshold = 1; // Number of chunks to buffer before playing
     let isBuffering = true; // New flag to manage the buffering state
     let nextTime = 0; // Tracks when the next audio chunk should start.
-
-    // // Extract interviewType from location state
-    // const interviewType = state?.interviewType;
 
 
     const addMessage = (newMessage) => {
@@ -189,7 +186,6 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
                 if (!analyserRef.current) {
                     analyserRef.current = audioContextRef.current.createAnalyser();
                     analyserRef.current.fftSize = 2048;
-                    // analyserRef.current.connect(audioContextRef.current.destination);
                 }
 
                 const source = audioContextRef.current.createMediaStreamSource(stream);
