@@ -21,7 +21,7 @@ from backend.routers.conversation.models import (
     send_message,
 )
 from backend.services import llm as llm_service
-from backend.services.eleven_labs.client import speak_sentence as send_speech
+from backend.services.eleven_labs.client import speak_sentence
 
 LOGGER = logging.getLogger(__name__)
 ASYNCIO_WAIT_TIME = 1
@@ -84,15 +84,11 @@ async def send_messages(
         sentence_txt = sentence.text
         full_text.append(sentence_txt)
 
-        if not enable_audio_output:
-            await send_message(
-                websocket, InterviewerMessage(type=MessageType.TEXT, data=sentence_txt)
-            )
-        else:
-            await send_message(
-                websocket, InterviewerMessage(type=MessageType.TEXT, data=sentence_txt)
-            )
-            await send_speech(websocket=websocket, sentence=sentence_txt)
+        await send_message(
+            websocket, InterviewerMessage(type=MessageType.TEXT, data=sentence_txt)
+        )
+        if  enable_audio_output:
+            await speak_sentence(websocket=websocket, sentence=sentence_txt)
         LOGGER.info(f"Sent sentence: {sentence_txt}")
 
     await send_message(websocket, InterviewerMessage(type=MessageType.STOP, data=""))
