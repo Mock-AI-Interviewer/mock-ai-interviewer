@@ -20,7 +20,11 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
     const [isRecorderLoaded, setIsRecorderLoaded] = useState(false);
     const [isInterviewStarted, setIsInterviewStarted] = useState(false);
     const sendIntervalRef = useRef(null);
-    const webSocketRef = useRef(null); // Ref to store the WebSocket instance
+    const webSocketRef = useRef(null);
+    const analyserRef = useRef(null);
+    const audioContextRef = useRef(null);
+    const canvasRef = useRef(null);
+    const animationFrameIdRef = useRef(null);
     const WEB_SOCKET_ENDPOINT = `${config.backendApiWebsocketUrl}/interview/${interviewId}/response`
     const WEB_SOCKET_FULL_URL = `${WEB_SOCKET_ENDPOINT}?user_id=${user_id}&enable_audio_input=${enableAudioInput}&enable_audio_output=${enableAudioOutput}`;
     const START_INTERVIEW_ENDPOINT = `${config.backendApiUrl}/interview/session/${interviewId}/start`
@@ -39,9 +43,6 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
     let bufferThreshold = 1; // Number of chunks to buffer before playing
     let isBuffering = true; // New flag to manage the buffering state
     let nextTime = 0; // Tracks when the next audio chunk should start.
-
-    // // Extract interviewType from location state
-    // const interviewType = state?.interviewType;
 
 
     const addMessage = (newMessage) => {
@@ -175,18 +176,29 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
             console.error("Recorder.js is not loaded yet.");
             return;
         }
+        
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                const audioContext = new AudioContext();
-                const source = audioContext.createMediaStreamSource(stream);
+                if (!audioContextRef.current) {
+                    audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+                }
+
+                if (!analyserRef.current) {
+                    analyserRef.current = audioContextRef.current.createAnalyser();
+                    analyserRef.current.fftSize = 2048;
+                }
+
+                const source = audioContextRef.current.createMediaStreamSource(stream);
+                source.connect(analyserRef.current);
 
                 recorderRef.current = new window.Recorder(source, { numChannels: 1 });
                 recorderRef.current.record();
+                requestAnimationFrame(drawVisual);
                 setRecording(true);
 
                 // Set up an interval to send audio chunks
                 sendIntervalRef.current = setInterval(sendAudioChunk, 1000); // Adjust interval as needed
+
             })
             .catch(error => {
                 console.error('Error accessing microphone:', error);
@@ -205,8 +217,17 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
                 console.log('Sent text');
             }, 1000); // Wait for 1 second before sending the message
 
+            cancelAnimationFrame(animationFrameIdRef.current);
+            clearCanvas();
+            
             setRecording(false);
         }
+    }
+
+    function clearCanvas() {
+        const canvas = canvasRef.current;
+        const canvasCtx = canvas.getContext('2d');
+        canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
     const receiveText = (data) => {
@@ -330,11 +351,22 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
     function drawVisual() {
         // Draw Waveform
         requestAnimationFrame(drawVisual);
+        let canvas;
+        let dataArray;
 
-        const dataArray = new Uint8Array(analyser.fftSize);
-        analyser.getByteTimeDomainData(dataArray);
-
-        const canvas = document.getElementById('visualizer');
+        if(turnAlert===TURN_INTERVIEWER)
+        {
+            canvas = document.getElementById('visualizer')
+            dataArray = new Uint8Array(analyser.fftSize);
+            analyser.getByteTimeDomainData(dataArray);
+        }
+        else if(turnAlert===TURN_CANDIDATE)
+        {
+            canvas = canvasRef.current;
+            const bufferLength = analyserRef.current.fftSize;
+            dataArray = new Uint8Array(bufferLength);
+            analyserRef.current.getByteTimeDomainData(dataArray);
+        }
         const context = canvas.getContext('2d');
         const width = canvas.width;
         const height = canvas.height;
@@ -367,8 +399,7 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
         context.lineTo(canvas.width, canvas.height / 2);
         context.stroke();
     }
-
-
+    
     return (
         <>
             <TopAppBar />
@@ -377,6 +408,7 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
                 <Typography variant="subtitle1">{interviewType.description}</Typography>
                 <Divider sx={{ mt: 2, mb: 2 }} />
                 <canvas id="visualizer" width="800px" height="200px"></canvas>
+                <canvas ref={canvasRef} id="visualizer2" width="800" height="200"></canvas>
 
                 {/* <div>
                     <Typography variant="h6">Transcript:</Typography>
