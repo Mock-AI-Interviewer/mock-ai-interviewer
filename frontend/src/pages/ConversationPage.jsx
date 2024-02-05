@@ -197,12 +197,11 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
 
                 recorderRef.current = new window.Recorder(source, { numChannels: 1 });
                 recorderRef.current.record();
-                requestAnimationFrame(drawAudioWaveform);
+                requestAnimationFrame(drawVisual);
                 setRecording(true);
 
                 // Set up an interval to send audio chunks
                 sendIntervalRef.current = setInterval(sendAudioChunk, 1000); // Adjust interval as needed
-                // source.connect(sendIntervalRef.current);
 
             })
             .catch(error => {
@@ -356,11 +355,22 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
     function drawVisual() {
         // Draw Waveform
         requestAnimationFrame(drawVisual);
+        let canvas;
+        let dataArray;
 
-        const dataArray = new Uint8Array(analyser.fftSize);
-        analyser.getByteTimeDomainData(dataArray);
-
-        const canvas = document.getElementById('visualizer');
+        if(turnAlert===TURN_INTERVIEWER)
+        {
+            canvas = document.getElementById('visualizer')
+            dataArray = new Uint8Array(analyser.fftSize);
+            analyser.getByteTimeDomainData(dataArray);
+        }
+        else if(turnAlert===TURN_CANDIDATE)
+        {
+            canvas = canvasRef.current;
+            const bufferLength = analyserRef.current.fftSize;
+            dataArray = new Uint8Array(bufferLength);
+            analyserRef.current.getByteTimeDomainData(dataArray);
+        }
         const context = canvas.getContext('2d');
         const width = canvas.width;
         const height = canvas.height;
@@ -393,47 +403,7 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
         context.lineTo(canvas.width, canvas.height / 2);
         context.stroke();
     }
-
-    function drawAudioWaveform() {
-        animationFrameIdRef.current = requestAnimationFrame(drawAudioWaveform);
-        
-        const canvas = canvasRef.current;
-        const canvasCtx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
     
-        canvasCtx.fillStyle = 'rgba(255, 255, 255, 0.5)'; // Background color
-        canvasCtx.fillRect(0, 0, width, height);
-    
-        canvasCtx.lineWidth = 2;
-        canvasCtx.strokeStyle = 'rgb(0, 0, 0)'; // Waveform color
-        canvasCtx.beginPath();
-    
-        const bufferLength = analyserRef.current.fftSize;
-        const dataArray = new Uint8Array(bufferLength);
-        analyserRef.current.getByteTimeDomainData(dataArray);
-    
-        const sliceWidth = width * 1.0 / bufferLength;
-        let x = 0;
-    
-        for (let i = 0; i < bufferLength; i++) {
-            const v = dataArray[i] / 128.0; // Normalize byte value to [0, 1]
-            const y = v * height / 2;
-    
-            if (i === 0) {
-                canvasCtx.moveTo(x, y);
-            } else {
-                canvasCtx.lineTo(x, y);
-            }
-    
-            x += sliceWidth;
-        }
-    
-        canvasCtx.lineTo(width, height / 2);
-        canvasCtx.stroke();
-    }
-
-
     return (
         <>
             <TopAppBar />
