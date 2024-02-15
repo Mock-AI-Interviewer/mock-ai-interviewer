@@ -1,5 +1,6 @@
 """This module contains the logic for interacting with the LLM API"""
-from typing import Generator, List
+from typing import Generator, List, Optional
+from backend import conf
 
 from backend.db.dao import interviews as interviews_dao
 from backend.models import llm as llm_models
@@ -22,7 +23,7 @@ def get_response_in_sentences(
     model: str = get_current_model(),
     stream: bool = True,
     sentance_stoppers: list = [".", "?", "!", ",", "\n"],
-    max_tokens: int = None,
+    max_tokens: Optional[int] = None,
     response_format: llm_models.ResponseFormat = llm_models.ResponseFormat.TEXT,
 ) -> Generator[llm_models.SentenceResponse, None, None]:
     """Gets a response from the LLM API and returns it sentence by sentence"""

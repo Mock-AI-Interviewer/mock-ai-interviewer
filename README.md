@@ -31,8 +31,9 @@
 
 - To run with hot reloading:
   - Doing it this way will allow you to make changes to the code and see the changes reflected in the browser
-  - Run `./run-local.sh` and stand up the mongo service
-  - Go into the `./backend` directory and run uvicorn with the following command: `uvicorn main:app --reload`
+  - Run `./run-local.sh` and stand up the `mongo` service
+  - Go into the `./backend` directory and run with the following command: `poetry run uvicorn main:app --reload`
+    - Read the [backend README](./backend/README.md) for more information on this
   - Go into the `./frontend` directory and run the following command: `npm start`
 
 - Run project via building containers Locally:

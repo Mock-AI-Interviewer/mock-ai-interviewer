@@ -1,6 +1,7 @@
 import { Container } from "@mui/material";
 import React, { useState, useEffect } from 'react';
 import TopAppBar from "components/TopAppBar";
+import { config } from 'appConfig';
 
 function AudioRecorderPage() {
     const [recording, setRecording] = useState(false);
@@ -8,7 +9,7 @@ function AudioRecorderPage() {
     const [audioURL, setAudioURL] = useState(null);
     const [websocket, setWebsocket] = useState(null);
     const [chunks, setChunks] = useState([]);
-    const [websocketEndpoint, setWebsocketEndpoint] = useState('ws://localhost:8000/ws/audio');
+    const [websocketEndpoint, setWebsocketEndpoint] = useState(`${config.backendApiWebsocketUrl}/ws/audio`);
     const [receivedText, setReceivedText] = useState('');
     const [liveUpdate, setLiveUpdate] = useState(''); // State for live update
     const [chunkCount, setChunkCount] = useState(0); // State to track the chunk count

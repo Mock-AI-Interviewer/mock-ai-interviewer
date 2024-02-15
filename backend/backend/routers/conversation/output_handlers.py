@@ -4,6 +4,7 @@ import logging
 import os
 from datetime import datetime
 from typing import Iterator, List
+from backend import conf
 
 from fastapi import WebSocket
 
@@ -21,7 +22,7 @@ from backend.routers.conversation.models import (
     send_message,
 )
 from backend.services import llm as llm_service
-from backend.services.eleven_labs.client import speak_sentence as send_speech
+from backend.services.eleven_labs.client import speak_sentence
 
 LOGGER = logging.getLogger(__name__)
 ASYNCIO_WAIT_TIME = 1
@@ -43,7 +44,7 @@ async def generate_response(
     # It is a generator that yields the response sentance by sentance
     llm_response = llm_service.get_response_in_sentences(
         messages=curr_message_hist,
-        max_tokens=200,
+        max_tokens=conf.get_llm_max_tokens(),
     )
 
     # Process LLM response sentence by sentence and return
@@ -92,7 +93,7 @@ async def send_messages(
             await send_message(
                 websocket, InterviewerMessage(type=MessageType.TEXT, data=sentence_txt)
             )
-            await send_speech(websocket=websocket, sentence=sentence_txt)
+            await speak_sentence(websocket=websocket, sentence=sentence_txt)
         LOGGER.info(f"Sent sentence: {sentence_txt}")
 
     await send_message(websocket, InterviewerMessage(type=MessageType.STOP, data=""))

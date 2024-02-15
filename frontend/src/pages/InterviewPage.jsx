@@ -18,7 +18,6 @@ function InterviewPage() {
     const INITIALISE_INTERVIEW_ENDPOINT = `${config.backendApiUrl}/interview/initialise`
 
     useEffect(() => {
-        // Replace the actual fetch call with a mock response
         listInterviewTypes();
     }, []);
 
@@ -29,7 +28,7 @@ function InterviewPage() {
                 'Content-Type': 'application/json',
             },
         })
-            .then(response => response.json()) // Parsing the JSON response
+            .then(response => response.json())
             .then(data => {
                 setInterviewTypes(data);
             })
@@ -57,7 +56,7 @@ function InterviewPage() {
             },
             body: JSON.stringify(body),
         })
-            .then(response => response.json()) // Parsing the JSON response
+            .then(response => response.json())
             .then(data => {
                 navigate(PATHS.CONVERSATION, {
                     state: {

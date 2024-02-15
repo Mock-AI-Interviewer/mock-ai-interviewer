@@ -138,3 +138,8 @@ def get_jinja_templates_path():
 def get_review_prompt():
     """Returns the review prompt for the LLM API"""
     return os.getenv("LLM_REVIEW_PROMPT")
+
+
+def get_llm_max_tokens():
+    """Returns the maximum number of tokens for the LLM API"""
+    return int(os.getenv("LLM_MAX_TOKENS", None))

@@ -41,7 +41,6 @@ function ResultsPage() {
             });
     }, [interviewId]);
 
-    // Styled Score Circle
     const ScoreCircle = styled(Box)(({ theme }) => ({
         width: 200,
         height: 200,
@@ -86,10 +85,12 @@ function ResultsPage() {
                     <Box display="flex" flexDirection={matches ? "row" : "column"} alignItems="center" justifyContent="center" style={{ width: '100%' }}>
 
                         <Box style={{ textAlign: 'center', margin: '2em 0', flex: 1 }}>
-                            <Typography variant="h4" style={{ marginBottom: '1em' }}>Interview Results</Typography>
-                            <ScoreCircle>
-                                {interviewResults.score}
-                            </ScoreCircle>
+                            <Typography variant="h2" style={{ marginBottom: '1em' }}>Interview Results</Typography>
+                            <Box display="flex" justifyContent="center" alignItems="center">
+                                <ScoreCircle>
+                                    {interviewResults.score}
+                                </ScoreCircle>
+                            </Box>
                             <Card variant="outlined" style={{ marginTop: '2em' }}>
                                 <CardContent>
                                     <Typography variant="body1">{interviewResults.feedback}</Typography>
