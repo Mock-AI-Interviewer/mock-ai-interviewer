@@ -40,7 +40,7 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
     analyser.connect(audioContext.destination);
     const audioQueue = [];
     let isPlaying = false;
-    let bufferThreshold = 1; // Number of chunks to buffer before playing
+    let bufferThreshold = 0; // Number of chunks to buffer before playing
     let isBuffering = true; // New flag to manage the buffering state
     let nextTime = 0; // Tracks when the next audio chunk should start.
 
@@ -111,7 +111,7 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
     const receiveAudio = (encodedAudioData) => {
         audioQueue.push(encodedAudioData);
         if (!isPlaying) {
-            playAudioQueue(); // Try to play the queue if not already playing
+            playAudioQueue();
         }
     };
 
@@ -137,13 +137,23 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
             }
             isPlaying = false; // Set to false when the queue is empty
         }
+        else {
+            console.log(`Buffering audio... (Queue length: ${audioQueue.length})`);
+        }
+    }
+
+    function binaryStringToHex(str) {
+        const byteArray = new Uint8Array(str.length);
+        for (let i = 0; i < str.length; i++) {
+            byteArray[i] = str.charCodeAt(i);
+        }
+        return Array.from(byteArray).map(byte => byte.toString(16).padStart(2, '0')).join('');
     }
 
     async function playAudioChunk(encodedAudioData) {
+        // Step 1: Decode Base64 string to binary data
+        const binaryData = atob(encodedAudioData);
         try {
-            // Step 1: Decode Base64 string to binary data
-            const binaryData = atob(encodedAudioData);
-
             // Step 2: Convert binary data to ArrayBuffer
             const length = binaryData.length;
             const buffer = new ArrayBuffer(length);
@@ -168,6 +178,8 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
             return new Promise(resolve => source.onended = resolve);
         } catch (e) {
             console.error('Error decoding audio data:', e);
+            const hexData = binaryStringToHex(binaryData);
+            console.log('Audio data:', hexData);
         }
     }
 
@@ -409,22 +421,6 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
                 <Divider sx={{ mt: 2, mb: 2 }} />
                 <canvas id="visualizer" width="800px" height="200px"></canvas>
                 <canvas ref={canvasRef} id="visualizer2" width="800" height="200"></canvas>
-
-                {/* <div>
-                    <Typography variant="h6">Transcript:</Typography>
-                    <div ref={interviewerTextboxRef} id="interviewerTextbox" sx={{
-                        maxHeight: '150px',
-                        width: '50%',
-                        margin: 'auto',
-                        overflowY: 'auto',
-                        whiteSpace: 'pre-wrap',
-                        border: 1,
-                        borderColor: 'grey.300',
-                        p: 1,
-                    }}>
-                        {interviewerText}
-                    </div>
-                </div> */}
                 <Divider sx={{ mt: 2, mb: 2 }} />
                 <Typography variant="h6" id="turnAlert"> {turnAlert} </Typography>
 
@@ -486,26 +482,20 @@ function ConversationPage({ user_id = 1, enableAudioInput = true, enableAudioOut
                         variant="contained"
                         color={isInterviewStarted ? "error" : "success"}
                         sx={isInterviewStarted ? {} : {
-                            // Custom styles for the "Start Interview" button
                             padding: '15px 30px',
                             fontSize: '1.2rem',
-                            backgroundColor: '#4caf50', // A greenish shade
+                            backgroundColor: '#4caf50',
                             '&:hover': {
-                                backgroundColor: '#43a047', // A slightly darker green for the hover state
+                                backgroundColor: '#43a047', 
                             },
                             borderRadius: '20px',
                             boxShadow: '0px 0px 10px rgba(0,0,0,0.2)',
-                            // Add more styles as needed
                         }}
                         id={isInterviewStarted ? "stopInterviewButton" : "startInterviewButton"}
                     >
                         {isInterviewStarted ? "Stop Interview" : "Start Interview"}
                     </Button>
                 </Box>
-                {/* <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 1 }}>
-                    <Button onClick={toggleRecording} variant="contained" color="success" id="recordButton">{recording ? 'Stop Recording' : 'Start Recording'}</Button>
-                </Box> */}
-
                 <TranscriptBox messages={messages} isOpen={true} />
             </Container>
         </>
